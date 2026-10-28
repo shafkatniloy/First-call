@@ -1,26 +1,36 @@
-# Image Generation Prompts Library: Vesper Ritual
+# Image Generation & Visual Reference Prompts: Vesper Ritual
 
-This document contains the exact prompts and generation parameters used to create the visual assets for Vesper Ritual, ensuring reproducible, consistent results for future iterations.
-
----
-
-## 1. Foreground Hand Assets
-
-### Hand Holding Lit Cigarette (`hand-lit.jpg`)
-- **Aspect Ratio**: `4:3`
-- **Output Filename**: `hand_lit_cigarette`
-- **Prompt**:
-  > *First-person POV perspective shot from lower-right corner: an adult hand holding a lit cigarette between the index and middle finger. Close up on hand and cigarette. Glowing hot red-orange ember tip with a tiny thin curl of smoke rising from the ember. Dark solid studio black background for clean compositing, dramatic cinematic rim lighting on fingers, realistic skin texture, sharp focus.*
-
-### Hand Holding Unlit Cigarette (`hand-unlit.jpg`)
-- **Aspect Ratio**: `4:3`
-- **Output Filename**: `hand_unlit_cig`
-- **Prompt**:
-  > *First-person POV perspective shot: an adult hand holding an unlit brown paper cigarette between the index and middle finger. Clean unburned cigarette tip, no smoke, unlit. Dark solid studio black background for clean compositing, dramatic cinematic rim lighting on fingers, realistic skin texture, sharp focus, matching position and angle.*
+This document contains the exact prompts and visual design specifications used to guide the 2D branding and 3D real-time environment construction for Vesper Ritual.
 
 ---
 
-## 2. Atmospheric Background Environments
+## 1. Retro Dhaka 3D Environment (Real-Time 3D Reference)
+
+### Nighttime Dhaka Street — "GTA Vice City Aesthetic"
+- **Style**: Early-2000s low-poly retro open world 3D game style (GTA: Vice City vibes).
+- **Subject**: A narrow nighttime street in Dhaka, Bangladesh ("পুরান ঢাকা / ধানমন্ডি").
+- **Visual Anchors**:
+  - Roadside tea stall ("চায়ের টং") with corrugated tin roof, rough timber posts, glass biscuit jars, and a steaming aluminum kettle under a warm glowing bare tungsten bulb.
+  - Traditional Dhaka cycle rickshaw with painted folk-art peacock/lotus canopy and spoke wheels.
+  - Emerald green CNG auto-rickshaw with yellow canvas roof and metal wire grilles.
+  - Tangled overhead electrical cables ("ঝুলন্ত তার") strung between concrete utility poles and sodium-vapor amber streetlamps.
+  - Weathered multi-story concrete buildings with metal roll-down shutters, balconies with iron railings, AC units, and cylindrical rooftop water tanks ("গাজী ট্যাংক").
+  - Bengali shopfront signage ("ভাই ভাই টি স্টল", "মা ফার্মেসী", "নিউ ঢাকা ইলেকট্রনিক্স") with glowing cyan and magenta neon accents.
+  - Wet asphalt road with puddle reflections and deep atmospheric night fog.
+
+---
+
+## 2. Brand Identity & Application Emblem
+
+### Luxury Wordmark Icon (`brand-icon.jpg`)
+- **Aspect Ratio**: `1:1`
+- **Output Filename**: `vesper_app_icon`
+- **Prompt**:
+  > *Minimalist luxury brand icon logo for 'Vesper Ritual': a dark circular emblem with a glowing warm ember spark, subtle delicate rising smoke trail, fine gold and dark charcoal metallic texture, deep black background, premium craftsmanship, high-end product design logo.*
+
+---
+
+## 3. Atmospheric Background Still References
 
 ### Rainy Window Backdrop (`rainy-window.jpg`)
 - **Aspect Ratio**: `16:9`
@@ -39,13 +49,3 @@ This document contains the exact prompts and generation parameters used to creat
 - **Output Filename**: `bg_foggy_terrace`
 - **Prompt**:
   > *Cinematic midnight terrace shrouded in dense atmospheric fog and soft misty haze. In the distance, solitary vintage street lamps cast a warm diffuse amber halo through dark fog. Minimalist moody architecture, deep blacks and charcoal tones, poetic quiet atmosphere, film still aesthetic.*
-
----
-
-## 3. Brand Identity & Application Emblem
-
-### Luxury Wordmark Icon (`brand-icon.jpg`)
-- **Aspect Ratio**: `1:1`
-- **Output Filename**: `vesper_app_icon`
-- **Prompt**:
-  > *Minimalist luxury brand icon logo for 'Vesper Ritual': a dark circular emblem with a glowing warm ember spark, subtle delicate rising smoke trail, fine gold and dark charcoal metallic texture, deep black background, premium craftsmanship, high-end product design logo.*

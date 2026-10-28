@@ -8,7 +8,7 @@ import { getEnvironmentById } from "@/config/environments.config";
 import { APP_CONFIG } from "@/config/app.config";
 import { audioManager } from "@/features/audio/audioManager";
 import { StorageManager } from "@/lib/storage/localStorage";
-import { ImmersiveScene } from "@/components/immersive-scene/ImmersiveScene";
+import { DhakaSceneCanvas } from "@/components/immersive-scene/DhakaSceneCanvas";
 import { SessionHUD } from "@/components/session-controls/SessionHUD";
 import { SessionCompletion } from "@/components/session-controls/SessionCompletion";
 
@@ -152,11 +152,10 @@ function SessionContent() {
 
   return (
     <main className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none">
-      {/* 1. Immersive First-Person Scene Viewport */}
-      <ImmersiveScene
+      {/* 1. Immersive 3D Retro Dhaka Street Viewport */}
+      <DhakaSceneCanvas
         state={state.state}
         brand={brand}
-        environment={environment}
         currentDraw={state.currentDraw}
         totalDraws={state.totalDraws}
         reducedMotion={reducedMotion}
