@@ -47,3 +47,4 @@ Sagging catenary electrical cables draped between octagonal concrete utility pol
 - **Orientation**: Looking slightly down the street toward the tea stall and receding alley.
 - **Rotation Clamping**: Yaw clamped to ±37° and Pitch clamped to ±20° to keep the user immersed without turning away from the detailed composition.
 - **Idle Motion**: Subtle organic Lissajous figure-8 breathing sway.
+

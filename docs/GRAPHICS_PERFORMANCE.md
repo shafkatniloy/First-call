@@ -34,3 +34,4 @@ When `reducedMotion` is enabled (either via system preferences or in the app's s
 - Camera look-around sway is frozen.
 - Rain particle simulation is paused.
 - Hand movement shifts from spring interpolation to gentle crossfades.
+

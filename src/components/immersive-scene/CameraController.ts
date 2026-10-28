@@ -94,3 +94,4 @@ export class CameraController {
     this.camera.quaternion.setFromEuler(euler);
   }
 }
+
