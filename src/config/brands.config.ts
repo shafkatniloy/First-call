@@ -1,0 +1,98 @@
+import { BrandConfig } from "@/types/brand";
+
+export const BRANDS: BrandConfig[] = [
+  {
+    id: "navy",
+    name: "Navy",
+    subtitle: "Maritime Midnight",
+    description: "Deep oceanic navy blue with silver foil accents. Crisp, cool air with a sharp, disciplined draw.",
+    accentColor: "#38bdf8",
+    emberColor: "#ff4d00",
+    bgGradients: "from-blue-950/80 via-slate-900 to-black",
+    packStyle: {
+      primaryColor: "#0f172a",
+      secondaryColor: "#1e293b",
+      accentColor: "#38bdf8",
+      pattern: "stripes",
+      borderTone: "border-sky-500/30",
+    },
+    filterTone: "white",
+    soundProfile: "crisp",
+  },
+  {
+    id: "marise",
+    name: "Marise",
+    subtitle: "Parchment & Crimson",
+    description: "Vintage European warm parchment with subtle scarlet pinstripes. Mellow, balanced, contemplative cadence.",
+    accentColor: "#f43f5e",
+    emberColor: "#ff5722",
+    bgGradients: "from-rose-950/70 via-stone-900 to-black",
+    packStyle: {
+      primaryColor: "#1c1917",
+      secondaryColor: "#292524",
+      accentColor: "#f43f5e",
+      pattern: "crest",
+      borderTone: "border-rose-500/30",
+    },
+    filterTone: "cork",
+    soundProfile: "mellow",
+  },
+  {
+    id: "marlboro",
+    name: "Marlboro",
+    subtitle: "Red Chevron Classic",
+    description: "Original stylized geometric roof-chevron in rich vermilion and charcoal. Dense, hearty tactile draw.",
+    accentColor: "#ef4444",
+    emberColor: "#ff3d00",
+    bgGradients: "from-red-950/80 via-neutral-900 to-black",
+    packStyle: {
+      primaryColor: "#171717",
+      secondaryColor: "#262626",
+      accentColor: "#ef4444",
+      pattern: "chevron",
+      borderTone: "border-red-500/40",
+    },
+    filterTone: "cork",
+    soundProfile: "dense",
+  },
+  {
+    id: "gold-leaf",
+    name: "Gold Leaf",
+    subtitle: "Emerald & Burnished Gold",
+    description: "Deep forest emerald bordered in burnished gold leaf filigree. Smooth, round, aromatic profile.",
+    accentColor: "#eab308",
+    emberColor: "#ff6a00",
+    bgGradients: "from-emerald-950/80 via-stone-900 to-black",
+    packStyle: {
+      primaryColor: "#062e1e",
+      secondaryColor: "#0c3b29",
+      accentColor: "#eab308",
+      pattern: "botanical",
+      borderTone: "border-amber-500/30",
+    },
+    filterTone: "gold-band",
+    soundProfile: "smooth",
+  },
+  {
+    id: "aura-pure",
+    name: "Aura Pure",
+    subtitle: "Mindful Harm Reduction",
+    description: "Clean minimalist matte slate and warm amber. Designed specifically for intentional, breath-centered rituals.",
+    accentColor: "#f59e0b",
+    emberColor: "#ffaa00",
+    bgGradients: "from-amber-950/60 via-zinc-900 to-black",
+    packStyle: {
+      primaryColor: "#18181b",
+      secondaryColor: "#27272a",
+      accentColor: "#f59e0b",
+      pattern: "minimal",
+      borderTone: "border-amber-400/30",
+    },
+    filterTone: "charcoal",
+    soundProfile: "mellow",
+  },
+];
+
+export const getBrandById = (id: string): BrandConfig => {
+  return BRANDS.find((b) => b.id === id) || BRANDS[2]; // Default to Marlboro chevron
+};
