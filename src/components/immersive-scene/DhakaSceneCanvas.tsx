@@ -112,7 +112,7 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
     const scene = world.scene;
 
     // 4. Attach First-Person Hand to Camera
-    const hand = new FirstPersonHand3D(brand.emberColor);
+    const hand = new FirstPersonHand3D(brand.emberColor, brand.filterTone);
     handRef.current = hand;
     camera.add(hand.group);
     scene.add(camera);
@@ -157,9 +157,11 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
         delta
       );
 
-      // Update Smoke Particles based on Ember Tip Position & Camera orientation
+      // Update Smoke Particles based on Ember Tip / Mouth Position & Camera orientation
       const emberWorldPos = hand.getEmberWorldPosition();
-      weatherAndSmoke.update(stateRef.current, emberWorldPos, camera, delta);
+      const mouthWorldPos = hand.getMouthWorldPosition();
+      const smokeOrigin = stateRef.current === "recovering" ? mouthWorldPos : emberWorldPos;
+      weatherAndSmoke.update(stateRef.current, smokeOrigin, camera, delta);
 
       renderer.render(scene, camera);
     };
