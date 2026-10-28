@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ProceduralTextures } from "./ProceduralTextures";
 import { SessionState } from "@/types/session";
 
@@ -19,14 +20,18 @@ export class FirstPersonHand3D {
   private lighterFlame!: THREE.Mesh;
   private lighterLight!: THREE.PointLight;
 
+  // Skinned Model References
+  private rightSkinnedMesh: THREE.SkinnedMesh | null = null;
+  private leftSkinnedMesh: THREE.SkinnedMesh | null = null;
+
   // Poses:
   // 1. Resting pose (down in lower-right foreground between draws)
   private restPos = new THREE.Vector3(0.18, -0.19, -0.38);
   private restRot = new THREE.Euler(-0.15, -0.28, 0.22);
 
   // 2. Mouth pose (cigarette directly in the player's mouth at bottom-center)
-  // Filter is at lips [0, -0.07, -0.11], cigarette angled forward into scene
-  private mouthPos = new THREE.Vector3(0.045, -0.082, -0.165);
+  // Filter is at lips [0, -0.065, -0.11], cigarette angled forward into scene
+  private mouthPos = new THREE.Vector3(0.038, -0.078, -0.155);
   private mouthRot = new THREE.Euler(0.24, -0.12, 0.15);
 
   private currentProgress: number = 0; // 0 = resting, 1 = in mouth
@@ -38,7 +43,10 @@ export class FirstPersonHand3D {
   private filterLength = 0.034;
   private cigRadius = 0.0078;
 
-  constructor(emberColorHex: string = "#ff4d00", filterTone: "cork" | "white" | "gold-band" | "charcoal" = "cork") {
+  constructor(
+    emberColorHex: string = "#ff4d00",
+    filterTone: "cork" | "white" | "gold-band" | "charcoal" = "cork"
+  ) {
     this.group = new THREE.Group();
     this.group.name = "FPS_ViewModel";
 
@@ -46,7 +54,7 @@ export class FirstPersonHand3D {
     this.rightHandGroup = new THREE.Group();
     this.group.add(this.rightHandGroup);
 
-    // 2. Left Hand (Lighter) Group
+    // 2. Left Hand Group
     this.leftHandGroup = new THREE.Group();
     this.group.add(this.leftHandGroup);
 
@@ -57,12 +65,12 @@ export class FirstPersonHand3D {
     // Left hand starts hidden off-screen below
     this.leftHandGroup.position.set(-0.25, -0.7, -0.4);
 
-    // Organic Skin Material with procedural pore & crease map
+    // Skin Material with warm peach-tan tone and natural micro-texture
     const skinTex = ProceduralTextures.createOrganicSkinTexture();
     const skinMat = new THREE.MeshStandardMaterial({
       map: skinTex,
-      color: 0xcb8d6f,
-      roughness: 0.58,
+      color: 0xc88568,
+      roughness: 0.55,
       metalness: 0.02,
     });
     const nailMat = new THREE.MeshStandardMaterial({
@@ -71,48 +79,128 @@ export class FirstPersonHand3D {
       metalness: 0.05,
     });
 
-    // Build models
-    this.buildOrganicRightHand(skinMat, nailMat, emberColorHex, filterTone);
-    this.buildOrganicLeftHand(skinMat);
+    // 1. Build Cigarette First (Gripped by fingers)
+    this.buildRealisticCigarette(emberColorHex, filterTone);
+
+    // 2. Build Sculpted Organic Hand Mesh
+    this.buildSculptedRightHand(skinMat, nailMat);
+
+    // 3. Build Left Hand & Lighter
+    this.buildSculptedLeftHand(skinMat);
+
+    // 4. Asynchronously Load High-Fidelity Skinned Human Hand Model if available
+    this.loadSkinnedHands(skinMat);
   }
 
   /**
-   * Anatomically sculpted organic human right hand holding cigarette
+   * Builds an authentic, realistic cigarette (Not a glowing light bulb!)
    */
-  private buildOrganicRightHand(
-    skinMat: THREE.Material,
-    nailMat: THREE.Material,
+  private buildRealisticCigarette(
     emberColorHex: string,
     filterTone: "cork" | "white" | "gold-band" | "charcoal"
   ): void {
-    // 1. Forearm (Extending naturally from bottom-right)
-    const forearmGeo = new THREE.CylinderGeometry(0.042, 0.062, 0.26, 16);
-    const forearm = new THREE.Mesh(forearmGeo, skinMat);
-    forearm.position.set(0.11, -0.19, 0.08);
+    this.cigGroup = new THREE.Group();
+
+    // 1. Filter with real cork texture & gold separator band
+    const cigTex = ProceduralTextures.createCigaretteTexture(filterTone);
+    const filterMat = new THREE.MeshStandardMaterial({
+      map: cigTex,
+      roughness: 0.82,
+    });
+    const filterMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(this.cigRadius, this.cigRadius, this.filterLength, 16),
+      filterMat
+    );
+    filterMesh.position.y = -this.filterLength / 2;
+    this.cigGroup.add(filterMesh);
+
+    // 2. White Paper Body with horizontal watermarks (Burns down!)
+    const paperMat = new THREE.MeshStandardMaterial({
+      map: cigTex,
+      roughness: 0.88,
+    });
+    this.cigPaperMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(this.cigRadius * 0.99, this.cigRadius * 0.99, this.initialPaperLength, 16),
+      paperMat
+    );
+    this.cigPaperMesh.position.y = this.initialPaperLength / 2;
+    this.cigGroup.add(this.cigPaperMesh);
+
+    // 3. Charred Paper Burn Ring
+    const ashRingMat = new THREE.MeshStandardMaterial({
+      color: 0x1c1917,
+      roughness: 0.95,
+    });
+    this.ashMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(this.cigRadius * 0.98, this.cigRadius * 0.98, 0.006, 16),
+      ashRingMat
+    );
+    this.ashMesh.position.y = this.initialPaperLength + 0.003;
+    this.cigGroup.add(this.ashMesh);
+
+    // 4. REALISTIC EMBER CONE (Porous gray ash with glowing red-hot fissures)
+    const emberTex = ProceduralTextures.createEmberTexture();
+    this.emberMat = new THREE.MeshStandardMaterial({
+      map: emberTex,
+      emissive: new THREE.Color(emberColorHex),
+      emissiveMap: emberTex,
+      emissiveIntensity: 0.8, // Mellow natural coal glow, NOT an LED light bulb!
+      roughness: 0.75,
+      metalness: 0.05,
+    });
+
+    this.emberMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(this.cigRadius * 0.78, this.cigRadius * 0.95, 0.012, 16),
+      this.emberMat
+    );
+    this.emberMesh.position.y = this.initialPaperLength + 0.012;
+    this.cigGroup.add(this.emberMesh);
+
+    // 5. Restrained Ambient Fire Heat (Subtle warm firelight)
+    this.emberLight = new THREE.PointLight(0xff4400, 0.9, 0.8);
+    this.emberLight.position.y = this.initialPaperLength + 0.015;
+    this.cigGroup.add(this.emberLight);
+
+    // Position naturally between index and middle finger
+    this.cigGroup.position.set(0.018, 0.065, 0.062);
+    this.cigGroup.rotation.set(0.38, -0.2, 1.24);
+    this.rightHandGroup.add(this.cigGroup);
+  }
+
+  /**
+   * Anatomically sculpted organic human right hand
+   */
+  private buildSculptedRightHand(skinMat: THREE.Material, nailMat: THREE.Material): void {
+    // 1. Forearm segment tapering from bottom right
+    const forearm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.042, 0.062, 0.28, 16),
+      skinMat
+    );
+    forearm.position.set(0.12, -0.19, 0.08);
     forearm.rotation.set(-0.45, 0.25, -0.5);
     this.rightHandGroup.add(forearm);
 
-    // 2. Anatomical Palm & Thenar Muscle (Soft rounded curves, not robotic blocks!)
+    // 2. Sculpted Palm with natural fleshy thenar & hypothenar muscle curves
     const palm = new THREE.Mesh(new THREE.SphereGeometry(0.058, 16, 16), skinMat);
     palm.scale.set(1.15, 1.4, 0.65);
     palm.position.set(0.035, -0.045, 0.025);
     palm.rotation.set(0.12, -0.15, 0.25);
     this.rightHandGroup.add(palm);
 
-    // Fleshy thumb muscle (thenar eminence)
-    const thenar = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), skinMat);
+    // Thenar thumb muscle bulk
+    const thenar = new THREE.Mesh(new THREE.SphereGeometry(0.034, 12, 12), skinMat);
     thenar.scale.set(0.8, 1.3, 0.8);
     thenar.position.set(-0.015, -0.04, 0.04);
     thenar.rotation.set(0.3, 0.2, 0.4);
     this.rightHandGroup.add(thenar);
 
-    // Knuckle pads
+    // Knuckle arch
     const knucklePad = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.08, 12), skinMat);
     knucklePad.position.set(0.035, 0.025, 0.035);
     knucklePad.rotation.z = Math.PI / 2;
     this.rightHandGroup.add(knucklePad);
 
-    // 3. Thumb (Resting gently below index finger)
+    // 3. Thumb
     const thumbGroup = new THREE.Group();
     const tProx = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.019, 0.055, 10), skinMat);
     tProx.position.y = 0.025;
@@ -142,7 +230,7 @@ export class FirstPersonHand3D {
     iDist.rotation.x = -0.6;
     indexGroup.add(iDist);
 
-    // Fingernail
+    // Translucent Fingernail
     const iNail = new THREE.Mesh(new THREE.PlaneGeometry(0.008, 0.011), nailMat);
     iNail.position.set(0, 0.112, 0.031);
     iNail.rotation.set(-0.65, 0, 0);
@@ -172,7 +260,7 @@ export class FirstPersonHand3D {
     midGroup.rotation.set(-0.46, 0.1, -0.42);
     this.rightHandGroup.add(midGroup);
 
-    // 6. Ring & Little Fingers (Curled naturally into palm)
+    // 6. Ring & Pinky Fingers (Folded comfortably into palm)
     const ringGroup = new THREE.Group();
     const rProx = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.0135, 0.048, 8), skinMat);
     rProx.position.y = 0.024;
@@ -196,94 +284,23 @@ export class FirstPersonHand3D {
     pinkyGroup.position.set(0.092, -0.015, 0.022);
     pinkyGroup.rotation.set(-0.72, 0, -0.58);
     this.rightHandGroup.add(pinkyGroup);
-
-    // 7. REALISTIC CIGARETTE ASSEMBLY
-    this.cigGroup = new THREE.Group();
-
-    // Textured Cork / White Filter with Gold Ring
-    const cigTex = ProceduralTextures.createCigaretteTexture(filterTone);
-    const filterMat = new THREE.MeshStandardMaterial({
-      map: cigTex,
-      roughness: 0.8,
-    });
-    const filterMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.cigRadius, this.cigRadius, this.filterLength, 16),
-      filterMat
-    );
-    filterMesh.position.y = -this.filterLength / 2;
-    this.cigGroup.add(filterMesh);
-
-    // White Rolling Paper Tube (Shortens as it burns!)
-    const paperMat = new THREE.MeshStandardMaterial({
-      map: cigTex,
-      roughness: 0.85,
-    });
-    this.cigPaperMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.cigRadius * 0.99, this.cigRadius * 0.99, this.initialPaperLength, 16),
-      paperMat
-    );
-    this.cigPaperMesh.position.y = this.initialPaperLength / 2;
-    this.cigGroup.add(this.cigPaperMesh);
-
-    // Charred Black Tobacco Burn Line
-    const ashMat = new THREE.MeshStandardMaterial({
-      color: 0x27272a,
-      roughness: 0.95,
-    });
-    this.ashMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.cigRadius * 0.98, this.cigRadius * 0.98, 0.008, 16),
-      ashMat
-    );
-    this.ashMesh.position.y = this.initialPaperLength + 0.004;
-    this.cigGroup.add(this.ashMesh);
-
-    // REALISTIC EMBER (Textured burning coal with gray ash crust — NOT a lightbulb!)
-    const emberTex = ProceduralTextures.createEmberTexture();
-    this.emberMat = new THREE.MeshStandardMaterial({
-      map: emberTex,
-      emissive: new THREE.Color(emberColorHex),
-      emissiveMap: emberTex,
-      emissiveIntensity: 1.2,
-      roughness: 0.7,
-      metalness: 0.1,
-    });
-
-    // Ember cone
-    this.emberMesh = new THREE.Mesh(
-      new THREE.CylinderGeometry(this.cigRadius * 0.82, this.cigRadius * 0.96, 0.014, 16),
-      this.emberMat
-    );
-    this.emberMesh.position.y = this.initialPaperLength + 0.014;
-    this.cigGroup.add(this.emberMesh);
-
-    // Soft Ambient Heat Glow (Restrained, natural fire warmth)
-    this.emberLight = new THREE.PointLight(0xff4d00, 1.2, 1.0);
-    this.emberLight.position.y = this.initialPaperLength + 0.018;
-    this.cigGroup.add(this.emberLight);
-
-    // Orientation: gripped naturally between index and middle finger
-    this.cigGroup.position.set(0.018, 0.065, 0.062);
-    this.cigGroup.rotation.set(0.38, -0.2, 1.24);
-    this.rightHandGroup.add(this.cigGroup);
   }
 
   /**
    * Anatomical Left Hand holding vintage steel lighter
    */
-  private buildOrganicLeftHand(skinMat: THREE.Material): void {
+  private buildSculptedLeftHand(skinMat: THREE.Material): void {
     const lighterMat = new THREE.MeshStandardMaterial({
       color: 0x94a3b8,
       metalness: 0.85,
       roughness: 0.25,
     });
 
-    // Left forearm
     const lForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.058, 0.22, 12), skinMat);
     lForearm.position.set(-0.07, -0.16, 0.05);
     lForearm.rotation.set(-0.35, -0.2, 0.45);
     this.leftHandGroup.add(lForearm);
 
-    // Left Palm cupped around lighter
     const lPalm = new THREE.Mesh(new THREE.SphereGeometry(0.052, 12, 12), skinMat);
     lPalm.scale.set(1.1, 1.3, 0.7);
     lPalm.position.set(0, -0.04, 0.02);
@@ -314,7 +331,7 @@ export class FirstPersonHand3D {
     chimney.position.set(0.004, 0.058, 0.038);
     this.leftHandGroup.add(chimney);
 
-    // Flame mesh
+    // Realistic Teardrop Flame Mesh
     const flameMat = new THREE.MeshBasicMaterial({
       color: 0xffcc33,
       transparent: true,
@@ -325,11 +342,45 @@ export class FirstPersonHand3D {
     this.lighterFlame.visible = false;
     this.leftHandGroup.add(this.lighterFlame);
 
-    // Flame light
+    // Flame Point Light
     this.lighterLight = new THREE.PointLight(0xff9900, 2.2, 1.8);
     this.lighterLight.position.set(0.004, 0.092, 0.038);
     this.lighterLight.intensity = 0;
     this.leftHandGroup.add(this.lighterLight);
+  }
+
+  /**
+   * Optional progressive enhancement: Loads continuous skinned WebXR hand model
+   */
+  private loadSkinnedHands(skinMat: THREE.Material): void {
+    if (typeof window === "undefined") return;
+
+    try {
+      const loader = new GLTFLoader();
+      loader.load(
+        "/assets/models/hands/right.glb",
+        (gltf) => {
+          const model = gltf.scene;
+          model.traverse((child) => {
+            if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
+              const mesh = child as THREE.SkinnedMesh;
+              mesh.material = skinMat;
+              this.rightSkinnedMesh = mesh;
+            }
+          });
+          // Adjust hand scale and position
+          model.scale.set(1.05, 1.05, 1.05);
+          model.position.set(0.02, -0.05, 0.02);
+          model.rotation.set(-0.2, 0.1, -0.1);
+        },
+        undefined,
+        (err) => {
+          // Seamless fallback: the sculpted organic hand is already active
+        }
+      );
+    } catch (e) {
+      // Handled gracefully
+    }
   }
 
   /**
@@ -342,9 +393,9 @@ export class FirstPersonHand3D {
     this.cigPaperMesh.scale.y = 1 - burnRatio;
     this.cigPaperMesh.position.y = newPaperLength / 2;
 
-    this.ashMesh.position.y = newPaperLength + 0.004;
-    this.emberMesh.position.y = newPaperLength + 0.014;
-    this.emberLight.position.y = newPaperLength + 0.018;
+    this.ashMesh.position.y = newPaperLength + 0.003;
+    this.emberMesh.position.y = newPaperLength + 0.012;
+    this.emberLight.position.y = newPaperLength + 0.015;
   }
 
   /**
@@ -361,9 +412,9 @@ export class FirstPersonHand3D {
     // Update cigarette burn-down
     this.updateBurnDown(currentDraw, totalDraws);
 
-    // DETERMINE POSE TARGET:
+    // POSE TARGET:
     // When state is 'lighting' OR 'inhaling', cigarette MUST be directly in the mouth!
-    // When state is 'recovering', it smoothly leaves the mouth back to resting.
+    // When state is 'recovering', it smoothly eases away from the mouth back to resting.
     // When state is 'ready' or 'idle', it rests naturally down in the lower-right foreground.
     let targetMouthProgress = 0;
     if (state === "lighting" || state === "inhaling") {
@@ -374,7 +425,6 @@ export class FirstPersonHand3D {
       targetMouthProgress = 0; // Relaxed in hand
     }
 
-    // Lerp smoothly into/out of mouth
     const lerpSpeed = (state === "inhaling" || state === "lighting") ? 2.6 : 1.7;
     this.currentProgress += (targetMouthProgress - this.currentProgress) * Math.min(1, delta * lerpSpeed);
 
@@ -399,7 +449,7 @@ export class FirstPersonHand3D {
 
     if (this.lightingTransition > 0.02) {
       this.leftHandGroup.visible = true;
-      // Bring lighter right up to the cigarette tip in the mouth: [x: -0.04, y: -0.09, z: -0.22]
+      // Bring lighter right up to the cigarette tip in the mouth
       const enterX = THREE.MathUtils.lerp(-0.25, -0.035, this.lightingTransition);
       const enterY = THREE.MathUtils.lerp(-0.7, -0.095, this.lightingTransition);
       const enterZ = THREE.MathUtils.lerp(-0.4, -0.22, this.lightingTransition);
@@ -421,23 +471,22 @@ export class FirstPersonHand3D {
       this.lighterLight.intensity = 0;
     }
 
-    // EMBER HEAT FLARE (Natural fire coal glow, not a bulb!)
+    // EMBER HEAT (Mellow coal fire, flares when inhaling)
     const isLit = state !== "idle";
     if (!isLit) {
       this.emberMat.emissiveIntensity = 0;
       this.emberLight.intensity = 0;
     } else {
-      // Heating up when inhaling in mouth or lighting
       const inhaleHeat = (state === "inhaling" || state === "lighting") ? 1.0 : 0.0;
-      const intensity = THREE.MathUtils.lerp(1.1, 3.4, inhaleHeat);
+      const intensity = THREE.MathUtils.lerp(0.8, 2.6, inhaleHeat);
       this.emberMat.emissiveIntensity = intensity;
       this.emberLight.intensity = intensity;
 
       if (inhaleHeat > 0.5) {
-        this.emberMat.emissive.setHex(0xff7722); // Hot orange fire
-        this.emberLight.color.setHex(0xffaa44);
+        this.emberMat.emissive.setHex(0xff6611); // Hot orange burning coal
+        this.emberLight.color.setHex(0xff8833);
       } else {
-        this.emberMat.emissive.setHex(0xd94400); // Mellow glowing ember
+        this.emberMat.emissive.setHex(0xcc3300); // Mellow natural ember
         this.emberLight.color.setHex(0xff4400);
       }
     }
