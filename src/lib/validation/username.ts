@@ -27,6 +27,14 @@ export function validateUsername(name: string): { valid: boolean; error?: string
     return { valid: false, error: "নাম সর্বোচ্চ ৩০ অক্ষরের হতে পারে" };
   }
 
+  // Strictly forbid "niloy" or any case-insensitive combination or substring
+  if (/niloy/i.test(name)) {
+    return {
+      valid: false,
+      error: "এই নামটি বা 'niloy' শব্দটি নামে ব্যবহার করা নিষিদ্ধ",
+    };
+  }
+
   // Regex matching English letters, digits, and @, #, $, _
   const validPattern = /^[a-zA-Z0-9@#$_]+$/;
   if (!validPattern.test(name)) {

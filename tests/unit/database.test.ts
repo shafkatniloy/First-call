@@ -19,6 +19,17 @@ describe("Username Validation", () => {
     expect(validateUsername("User-Name").valid).toBe(false);
   });
 
+  it("strictly rejects any casing or substring containing 'niloy'", () => {
+    expect(validateUsername("niloy").valid).toBe(false);
+    expect(validateUsername("Niloy").valid).toBe(false);
+    expect(validateUsername("NILOY").valid).toBe(false);
+    expect(validateUsername("NiLoY").valid).toBe(false);
+    expect(validateUsername("safkatniloy").valid).toBe(false);
+    expect(validateUsername("Niloy@123").valid).toBe(false);
+    expect(validateUsername("Boss_NILOY#").valid).toBe(false);
+    expect(validateUsername("cool_niloy_pro").valid).toBe(false);
+  });
+
   it("accepts valid names with letters, numbers, @, #, and $", () => {
     expect(validateUsername("Safkat@1").valid).toBe(true);
     expect(validateUsername("Benson#King").valid).toBe(true);
