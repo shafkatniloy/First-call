@@ -517,5 +517,92 @@ export class DhakaProps {
 
     return new THREE.Line(geometry, material);
   }
+
+  /**
+   * Roadside Distressed Brick Boundary Wall with the Authentic Election Poster pasted at eye level
+   */
+  public static createRoadsidePosterWall(
+    width: number = 1.6,
+    height: number = 2.3,
+    depth: number = 0.24
+  ): THREE.Group {
+    const wallGroup = new THREE.Group();
+    wallGroup.name = "RoadsidePosterWall";
+
+    // 1. Brick Wall Body
+    const brickTex = ProceduralTextures.createBrickWallTexture();
+    brickTex.repeat.set(1.5, 2.0);
+    const brickMat = new THREE.MeshStandardMaterial({
+      map: brickTex,
+      roughness: 0.88,
+      metalness: 0.05,
+    });
+    const wallBody = new THREE.Mesh(
+      new THREE.BoxGeometry(width, height, depth),
+      brickMat
+    );
+    wallBody.position.y = height / 2;
+    wallBody.castShadow = true;
+    wallBody.receiveShadow = true;
+    wallGroup.add(wallBody);
+
+    // 2. Concrete Coping Slab on Top
+    const copingMat = new THREE.MeshStandardMaterial({
+      color: 0x475569, // Weathered grey slate
+      roughness: 0.9,
+    });
+    const coping = new THREE.Mesh(
+      new THREE.BoxGeometry(width + 0.1, 0.09, depth + 0.08),
+      copingMat
+    );
+    coping.position.y = height + 0.045;
+    coping.castShadow = true;
+    wallGroup.add(coping);
+
+    // 3. Concrete Curb Base
+    const curb = new THREE.Mesh(
+      new THREE.BoxGeometry(width + 0.06, 0.14, depth + 0.06),
+      copingMat
+    );
+    curb.position.y = 0.07;
+    curb.receiveShadow = true;
+    wallGroup.add(curb);
+
+    // 4. Authentic Election Poster ("কলা মার্কা" / আমানত উল্লাহ আমান)
+    const textureLoader = new THREE.TextureLoader();
+    const posterTex = textureLoader.load("/assets/election_poster.jpg", () => {
+      posterTex.colorSpace = THREE.SRGBColorSpace;
+      posterMat.needsUpdate = true;
+    });
+
+    // 764 x 1024 aspect ratio: 0.746 (0.84m wide x 1.12m tall)
+    const posterGeo = new THREE.PlaneGeometry(0.84, 1.12);
+    const posterMat = new THREE.MeshStandardMaterial({
+      map: posterTex,
+      emissiveMap: posterTex,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.52, // Enhanced self-illumination for night legibility
+      roughness: 0.7,
+      metalness: 0.02,
+    });
+    const poster = new THREE.Mesh(posterGeo, posterMat);
+    poster.position.set(0, 1.25, depth / 2 + 0.008);
+    wallGroup.add(poster);
+
+    // 5. Subtle wall-mounted brass light fixture above poster
+    const lampFixture = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.08, 0.08, 10),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7 })
+    );
+    lampFixture.position.set(0, height - 0.2, depth / 2 + 0.12);
+    lampFixture.rotation.x = Math.PI / 4;
+    wallGroup.add(lampFixture);
+
+    const wallLight = new THREE.PointLight(0xffb040, 2.2, 4.0);
+    wallLight.position.set(0, height - 0.22, depth / 2 + 0.18);
+    wallGroup.add(wallLight);
+
+    return wallGroup;
+  }
 }
 

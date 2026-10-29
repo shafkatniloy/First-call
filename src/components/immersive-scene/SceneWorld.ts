@@ -199,28 +199,27 @@ export class SceneWorld {
     toLetPoster.rotation.y = Math.PI / 2;
     bL1.add(toLetPoster);
 
-    const noticePosterTex = ProceduralTextures.createStreetPoster(
-      "সতর্কবার্তা",
-      "ময়লা ফেলা নিষেধ",
-      "এখানে ময়লা-আবর্জনা ও প্রস্রাব\nকরা সম্পূর্ণ নিষেধ\nআইন অমান্যকারীকে ৫০০/- জরিমানা",
-      "আদেশক্রমে: ঢাকা সিটি কর্পোরেশন",
-      "#ffffff",
-      "#991b1b",
-      "#0f172a"
+    // Authentic Election Poster pasted on Building L1 wall beside tea stall
+    const textureLoader = new THREE.TextureLoader();
+    const electionPosterTex = textureLoader.load("/assets/election_poster.jpg", () => {
+      electionPosterTex.colorSpace = THREE.SRGBColorSpace;
+      electionWallPosterMat.needsUpdate = true;
+    });
+
+    const electionWallPosterMat = new THREE.MeshStandardMaterial({
+      map: electionPosterTex,
+      emissiveMap: electionPosterTex,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.52,
+      roughness: 0.75,
+    });
+    const bL1ElectionPoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.84, 1.12),
+      electionWallPosterMat
     );
-    const noticePoster = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.68, 0.96),
-      new THREE.MeshStandardMaterial({
-        map: noticePosterTex,
-        emissiveMap: noticePosterTex,
-        emissive: new THREE.Color(0xffffff),
-        emissiveIntensity: 0.5,
-        roughness: 0.8,
-      })
-    );
-    noticePoster.position.set(-2.97, 1.6, -1.2);
-    noticePoster.rotation.y = Math.PI / 2;
-    bL1.add(noticePoster);
+    bL1ElectionPoster.position.set(-2.97, 1.6, -1.2);
+    bL1ElectionPoster.rotation.y = Math.PI / 2;
+    bL1.add(bL1ElectionPoster);
 
     // 2nd Floor Balcony with iron railing
     const balconyL1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 4.5), concreteMatA);
@@ -389,6 +388,12 @@ export class SceneWorld {
     fightNPCs.group.rotation.y = 0.35;
     this.scene.add(fightNPCs.group);
     this.animatedNPCs.push(fightNPCs.update);
+
+    // 1d. Roadside Distressed Brick Boundary Wall with the Election Poster visible from default view
+    const posterWall = DhakaProps.createRoadsidePosterWall(1.6, 2.3, 0.24);
+    posterWall.position.set(-1.85, 0, -0.45);
+    posterWall.rotation.y = 0.45; // Angled facing directly towards the player camera in default view
+    this.scene.add(posterWall);
 
     // 2. Traditional Cycle Rickshaw parked on curbside
     const rickshaw = DhakaProps.createRickshaw();

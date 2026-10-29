@@ -938,4 +938,57 @@ export class ProceduralTextures {
       ctx.stroke();
     });
   }
+
+  /**
+   * Distressed Roadside Red Clay Brick Wall Texture (Dhaka Street style)
+   */
+  public static createBrickWallTexture(): THREE.CanvasTexture {
+    return this.getOrCreate("dhaka_brick_wall_texture", 512, 512, (ctx, w, h) => {
+      // Cement Mortar Base
+      ctx.fillStyle = "#9ca3af";
+      ctx.fillRect(0, 0, w, h);
+
+      const brickH = 26;
+      const brickW = 64;
+      const mortar = 4;
+
+      let row = 0;
+      for (let y = 0; y < h; y += brickH + mortar) {
+        const xOffset = (row % 2 === 0) ? 0 : -brickW / 2;
+        row++;
+
+        for (let x = xOffset; x < w + brickW; x += brickW + mortar) {
+          // Brick color variations
+          const tones = ["#852b1b", "#943321", "#782415", "#9e3825", "#8c2c1c", "#a33e28"];
+          const tone = tones[Math.floor(Math.random() * tones.length)];
+          ctx.fillStyle = tone;
+          ctx.fillRect(x, y, brickW, brickH);
+
+          // Brick surface texture
+          ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
+          for (let i = 0; i < 20; i++) {
+            ctx.fillRect(x + Math.random() * brickW, y + Math.random() * brickH, 2, 2);
+          }
+        }
+      }
+
+      // Rain grime and damp staining near the base
+      const grimeGrad = ctx.createLinearGradient(0, h * 0.4, 0, h);
+      grimeGrad.addColorStop(0, "rgba(20, 25, 30, 0)");
+      grimeGrad.addColorStop(0.7, "rgba(15, 20, 25, 0.35)");
+      grimeGrad.addColorStop(1, "rgba(10, 15, 20, 0.65)");
+      ctx.fillStyle = grimeGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Damp moss patches
+      ctx.fillStyle = "rgba(20, 83, 45, 0.25)";
+      for (let i = 0; i < 8; i++) {
+        const mx = Math.random() * w;
+        const my = h - Math.random() * 90;
+        ctx.beginPath();
+        ctx.ellipse(mx, my, 25 + Math.random() * 20, 12 + Math.random() * 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+  }
 }
