@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Username is required" }, { status: 400 });
     }
 
-    const result = recordBurn({
+    const result = await recordBurn({
       name,
       brandId: brandId || "unknown",
       brandName: brandName || "Cigarette",

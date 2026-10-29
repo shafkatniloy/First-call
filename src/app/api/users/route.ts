@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Name query parameter required" }, { status: 400 });
   }
 
-  const user = findUser(name);
+  const user = await findUser(name);
   return NextResponse.json({
     exists: !!user,
     user: user
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
 
-    const result = createUser(name);
+    const result = await createUser(name);
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 409 });
     }

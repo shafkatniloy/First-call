@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { validateUsername } from "@/lib/validation/username";
 import { createUser, findUser, recordBurn, getLeaderboard } from "@/lib/db/database";
 
@@ -31,23 +31,23 @@ describe("Username Validation", () => {
 describe("Database & Leaderboard", () => {
   const testUserName = `TestUser_${Date.now()}#$`;
 
-  it("creates a new unique user", () => {
-    const res = createUser(testUserName);
+  it("creates a new unique user", async () => {
+    const res = await createUser(testUserName);
     expect(res.success).toBe(true);
     expect(res.user?.name).toBe(testUserName);
     expect(res.user?.totalBurnt).toBe(0);
   });
 
-  it("recognizes existing user on duplicate name and returns welcome back", () => {
-    const returnRes = createUser(testUserName.toLowerCase());
+  it("recognizes existing user on duplicate name and returns welcome back", async () => {
+    const returnRes = await createUser(testUserName.toLowerCase());
     expect(returnRes.success).toBe(true);
     expect(returnRes.isReturning).toBe(true);
     expect(returnRes.user?.name).toBe(testUserName);
     expect(returnRes.message).toContain(`Welcome back @${testUserName}!`);
   });
 
-  it("records a burnt cigarette against user", () => {
-    const burn = recordBurn({
+  it("records a burnt cigarette against user", async () => {
+    const burn = await recordBurn({
       name: testUserName,
       brandId: "benson",
       brandName: "Benson & Hedges",
@@ -57,16 +57,15 @@ describe("Database & Leaderboard", () => {
     expect(burn.success).toBe(true);
     expect(burn.totalBurnt).toBe(1);
 
-    const user = findUser(testUserName);
+    const user = await findUser(testUserName);
     expect(user?.totalBurnt).toBe(1);
     expect(user?.brandStats["benson"]).toBe(1);
   });
 
-  it("returns leaderboard with ranks and top 1000", () => {
-    const lb = getLeaderboard(1000, testUserName);
+  it("returns leaderboard with ranks and top 1000", async () => {
+    const lb = await getLeaderboard(1000, testUserName);
     expect(lb.topUsers.length).toBeGreaterThan(0);
     expect(lb.currentUser?.name).toBe(testUserName);
     expect(lb.topUsers[0].totalBurnt).toBeGreaterThanOrEqual(lb.topUsers[1]?.totalBurnt ?? 0);
   });
 });
-

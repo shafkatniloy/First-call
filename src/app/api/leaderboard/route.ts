@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const userNameParam = searchParams.get("userName");
 
     const limit = limitParam ? Math.min(1000, Math.max(1, parseInt(limitParam, 10))) : 1000;
-    const leaderboard = getLeaderboard(limit, userNameParam || undefined);
+    const leaderboard = await getLeaderboard(limit, userNameParam || undefined);
 
     return NextResponse.json({
       success: true,

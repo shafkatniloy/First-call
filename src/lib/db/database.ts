@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { validateUsername } from "../validation/username";
+import { getSupabase, isSupabaseConfigured } from "./supabase";
 
 export interface UserRecord {
   id: string;
@@ -43,7 +44,7 @@ const DB_DIR = isServerless ? path.join("/tmp", "vesper_data") : path.join(proce
 const DB_FILE = path.join(DB_DIR, "database.json");
 const DB_TMP_FILE = path.join(DB_DIR, "database.tmp.json");
 
-// In-memory cache for ultra-fast queries
+// In-memory cache for ultra-fast local queries
 let cachedDb: DatabaseSchema | null = null;
 
 function generateSeedUsers(): Record<string, UserRecord> {
@@ -108,7 +109,6 @@ export function loadDatabase(): DatabaseSchema {
         return parsed;
       }
     } else if (isServerless) {
-      // Check if bundled initial database exists in repository
       const bundledDb = path.join(process.cwd(), "data", "database.json");
       if (fs.existsSync(bundledDb)) {
         const raw = fs.readFileSync(bundledDb, "utf-8");
@@ -123,7 +123,6 @@ export function loadDatabase(): DatabaseSchema {
     console.error("Error reading database, creating fresh seed database:", err);
   }
 
-  // Create initial seed database
   const initialDb: DatabaseSchema = {
     version: 1,
     users: generateSeedUsers(),
@@ -142,7 +141,6 @@ export function saveDatabase(db: DatabaseSchema): void {
       fs.mkdirSync(DB_DIR, { recursive: true });
     }
     const data = JSON.stringify(db, null, 2);
-    // Atomic write
     fs.writeFileSync(DB_TMP_FILE, data, "utf-8");
     fs.renameSync(DB_TMP_FILE, DB_FILE);
   } catch (err) {
@@ -153,9 +151,39 @@ export function saveDatabase(db: DatabaseSchema): void {
 /**
  * Checks if a username already exists in the database.
  */
-export function findUser(name: string): UserRecord | null {
+export async function findUser(name: string): Promise<UserRecord | null> {
+  const trimmed = name.trim();
+  const normalized = trimmed.toLowerCase();
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("normalized_name", normalized)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase findUser error:", error);
+      } else if (data) {
+        return {
+          id: data.id,
+          name: data.name,
+          normalizedName: data.normalized_name,
+          createdAt: data.created_at,
+          totalBurnt: Number(data.total_burnt) || 0,
+          brandStats: data.brand_stats || {},
+          lastActive: data.last_active,
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error("Supabase findUser exception, falling back to local:", err);
+    }
+  }
+
   const db = loadDatabase();
-  const normalized = name.trim().toLowerCase();
   return db.users[normalized] || null;
 }
 
@@ -164,23 +192,90 @@ export function findUser(name: string): UserRecord | null {
  * If the username already exists in the database, recognizes them as returning (Welcome Back)
  * and continues registering next cigarettes against their existing account.
  */
-export function createUser(name: string): {
+export async function createUser(name: string): Promise<{
   success: boolean;
   user?: UserRecord;
   isReturning?: boolean;
   message?: string;
   error?: string;
-} {
+}> {
   const validation = validateUsername(name);
   if (!validation.valid) {
     return { success: false, error: validation.error };
   }
 
-  const db = loadDatabase();
   const trimmed = name.trim();
   const normalized = trimmed.toLowerCase();
 
-  // If user is already in the database, welcome them back!
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const existing = await findUser(trimmed);
+      if (existing) {
+        return {
+          success: true,
+          user: existing,
+          isReturning: true,
+          message: `Welcome back @${existing.name}!`,
+        };
+      }
+
+      const now = new Date().toISOString();
+      const newId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const { data, error } = await supabase
+        .from("users")
+        .insert({
+          id: newId,
+          name: trimmed,
+          normalized_name: normalized,
+          total_burnt: 0,
+          brand_stats: {},
+          created_at: now,
+          last_active: now,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // If conflict occurs concurrently, fetch existing
+        if (error.code === "23505") {
+          const conflictUser = await findUser(trimmed);
+          if (conflictUser) {
+            return {
+              success: true,
+              user: conflictUser,
+              isReturning: true,
+              message: `Welcome back @${conflictUser.name}!`,
+            };
+          }
+        }
+        console.error("Supabase createUser error:", error);
+        return { success: false, error: "Failed to create user in database" };
+      }
+
+      const createdUser: UserRecord = {
+        id: data.id,
+        name: data.name,
+        normalizedName: data.normalized_name,
+        createdAt: data.created_at,
+        totalBurnt: Number(data.total_burnt) || 0,
+        brandStats: data.brand_stats || {},
+        lastActive: data.last_active,
+      };
+
+      return {
+        success: true,
+        user: createdUser,
+        isReturning: false,
+        message: `Welcome @${createdUser.name}!`,
+      };
+    } catch (err) {
+      console.error("Supabase createUser exception, falling back to local:", err);
+    }
+  }
+
+  // Local JSON Fallback
+  const db = loadDatabase();
   if (db.users[normalized]) {
     const existingUser = db.users[normalized];
     return {
@@ -216,24 +311,83 @@ export function createUser(name: string): {
 /**
  * Records a completed burnt cigarette against the specified username.
  */
-export function recordBurn(params: {
+export async function recordBurn(params: {
   name: string;
   brandId: string;
   brandName: string;
   draws: number;
   durationSeconds: number;
-}): { success: boolean; totalBurnt: number; rank: number; error?: string } {
-  const db = loadDatabase();
-  const normalized = params.name.trim().toLowerCase();
-  let user = db.users[normalized];
+}): Promise<{ success: boolean; totalBurnt: number; rank: number; error?: string }> {
+  const trimmed = params.name.trim();
+  const normalized = trimmed.toLowerCase();
 
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      let user = await findUser(trimmed);
+      const now = new Date().toISOString();
+
+      if (!user) {
+        const createRes = await createUser(trimmed);
+        if (!createRes.success || !createRes.user) {
+          return { success: false, totalBurnt: 0, rank: 0, error: createRes.error };
+        }
+        user = createRes.user;
+      }
+
+      const newTotal = user.totalBurnt + 1;
+      const newBrandStats = {
+        ...user.brandStats,
+        [params.brandId]: (user.brandStats[params.brandId] || 0) + 1,
+      };
+
+      // 1. Insert burn log
+      await supabase.from("burns").insert({
+        id: `burn_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        user_name: user.name,
+        brand_id: params.brandId,
+        brand_name: params.brandName,
+        draws: params.draws,
+        duration_seconds: params.durationSeconds,
+        timestamp: now,
+      });
+
+      // 2. Update user totals
+      await supabase
+        .from("users")
+        .update({
+          total_burnt: newTotal,
+          brand_stats: newBrandStats,
+          last_active: now,
+        })
+        .eq("normalized_name", normalized);
+
+      // 3. Compute rank (number of users with total_burnt > newTotal + 1)
+      const { count } = await supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gt("total_burnt", newTotal);
+
+      const rank = (count ?? 0) + 1;
+      return {
+        success: true,
+        totalBurnt: newTotal,
+        rank,
+      };
+    } catch (err) {
+      console.error("Supabase recordBurn exception, falling back to local:", err);
+    }
+  }
+
+  // Local JSON Fallback
+  const db = loadDatabase();
+  let user = db.users[normalized];
   const now = new Date().toISOString();
 
-  // If user doesn't exist yet, automatically create
   if (!user) {
     user = {
       id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      name: params.name.trim(),
+      name: trimmed,
       normalizedName: normalized,
       createdAt: now,
       totalBurnt: 0,
@@ -260,7 +414,6 @@ export function recordBurn(params: {
   db.burns.push(burnEvent);
   saveDatabase(db);
 
-  // Compute rank
   const allUsers = Object.values(db.users).sort((a, b) => b.totalBurnt - a.totalBurnt);
   const rank = allUsers.findIndex((u) => u.normalizedName === normalized) + 1;
 
@@ -274,23 +427,106 @@ export function recordBurn(params: {
 /**
  * Returns the top users (up to limit, e.g. 1000) sorted by totalBurnt descending.
  */
-export function getLeaderboard(
+export async function getLeaderboard(
   limit: number = 1000,
   requestingUserName?: string
-): {
+): Promise<{
   topUsers: LeaderboardEntry[];
   currentUser?: LeaderboardEntry;
   totalUsers: number;
-} {
+}> {
+  const reqNorm = requestingUserName?.trim().toLowerCase();
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, count, error } = await supabase
+        .from("users")
+        .select("*", { count: "exact" })
+        .order("total_burnt", { ascending: false })
+        .order("last_active", { ascending: true })
+        .limit(limit);
+
+      if (!error && data) {
+        let currentUserEntry: LeaderboardEntry | undefined;
+
+        const topUsers: LeaderboardEntry[] = data.map((u, idx) => {
+          let favBrand = "benson";
+          let maxCount = -1;
+          const stats = (u.brand_stats as Record<string, number>) || {};
+          for (const [brand, bCount] of Object.entries(stats)) {
+            if (Number(bCount) > maxCount) {
+              maxCount = Number(bCount);
+              favBrand = brand;
+            }
+          }
+
+          const isCurrent = reqNorm ? u.normalized_name === reqNorm : false;
+          const entry: LeaderboardEntry = {
+            rank: idx + 1,
+            name: u.name,
+            totalBurnt: Number(u.total_burnt) || 0,
+            favoriteBrand: favBrand,
+            brandStats: stats,
+            lastActive: u.last_active,
+            isCurrentUser: isCurrent,
+          };
+
+          if (isCurrent) {
+            currentUserEntry = entry;
+          }
+
+          return entry;
+        });
+
+        // If current user is requested but not in the top slice, find their specific rank
+        if (reqNorm && !currentUserEntry) {
+          const user = await findUser(requestingUserName!);
+          if (user) {
+            const { count: higherCount } = await supabase
+              .from("users")
+              .select("*", { count: "exact", head: true })
+              .gt("total_burnt", user.totalBurnt);
+
+            let favBrand = "benson";
+            let maxCount = -1;
+            for (const [brand, bCount] of Object.entries(user.brandStats)) {
+              if (bCount > maxCount) {
+                maxCount = bCount;
+                favBrand = brand;
+              }
+            }
+
+            currentUserEntry = {
+              rank: (higherCount ?? 0) + 1,
+              name: user.name,
+              totalBurnt: user.totalBurnt,
+              favoriteBrand: favBrand,
+              brandStats: user.brandStats,
+              lastActive: user.lastActive,
+              isCurrentUser: true,
+            };
+          }
+        }
+
+        return {
+          topUsers,
+          currentUser: currentUserEntry,
+          totalUsers: count || topUsers.length,
+        };
+      }
+    } catch (err) {
+      console.error("Supabase getLeaderboard exception, falling back to local:", err);
+    }
+  }
+
+  // Local JSON Fallback
   const db = loadDatabase();
   const allUsers = Object.values(db.users).sort((a, b) => b.totalBurnt - a.totalBurnt);
-
-  const reqNorm = requestingUserName?.trim().toLowerCase();
 
   let currentUserEntry: LeaderboardEntry | undefined;
 
   const topUsers: LeaderboardEntry[] = allUsers.slice(0, limit).map((u, idx) => {
-    // Find favorite brand
     let favBrand = "benson";
     let maxCount = -1;
     for (const [brand, count] of Object.entries(u.brandStats)) {
@@ -318,7 +554,6 @@ export function getLeaderboard(
     return entry;
   });
 
-  // If current user is outside top 1000, still find their rank
   if (reqNorm && !currentUserEntry) {
     const userIndex = allUsers.findIndex((u) => u.normalizedName === reqNorm);
     if (userIndex !== -1) {
@@ -349,4 +584,3 @@ export function getLeaderboard(
     totalUsers: allUsers.length,
   };
 }
-
