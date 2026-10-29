@@ -9,6 +9,18 @@ export class AudioManager {
   private ambientVolume: number = 0.45;
   private activeAmbientType: string | null = null;
 
+  private static readonly DRAW_AUDIO_SOURCES: string[] = [
+    "/assets/audio/draw_1.mp3",
+    "/assets/audio/draw_2.mp3",
+    "/assets/audio/draw_3.mp3",
+    "/assets/audio/draw_4.mp3",
+    "/assets/audio/draw_5.mp3",
+    "/assets/audio/draw_6.mp3",
+  ];
+  private drawAudioBuffers: AudioBuffer[] = [];
+  private lastDrawAudioIndex: number = -1;
+  private isPreloadingDrawAudio: boolean = false;
+
   private constructor() {
     // Lazy AudioContext initialization
   }
@@ -34,6 +46,9 @@ export class AudioManager {
           this.ambientGain = this.ctx.createGain();
           this.ambientGain.gain.setValueAtTime(this.isMuted ? 0 : this.ambientVolume, this.ctx.currentTime);
           this.ambientGain.connect(this.masterGain);
+
+          // Preload draw audio buffers in background
+          this.preloadDrawAudio();
         }
       }
       if (this.ctx && this.ctx.state === "suspended") {
@@ -41,6 +56,45 @@ export class AudioManager {
       }
     } catch (e) {
       console.warn("Could not initialize AudioContext:", e);
+    }
+  }
+
+  public async preloadDrawAudio(): Promise<void> {
+    if (typeof window === "undefined" || !this.ctx || this.isPreloadingDrawAudio) return;
+    if (this.drawAudioBuffers.length === AudioManager.DRAW_AUDIO_SOURCES.length) return;
+    this.isPreloadingDrawAudio = true;
+
+    try {
+      const loadPromises = AudioManager.DRAW_AUDIO_SOURCES.map(async (url) => {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const arrayBuffer = await res.arrayBuffer();
+          if (this.ctx) {
+            return await this.ctx.decodeAudioData(arrayBuffer);
+          }
+        } catch {
+          // If mp3 fails, attempt ogg fallback
+          try {
+            const fallbackUrl = url.replace(".mp3", ".ogg");
+            const resFb = await fetch(fallbackUrl);
+            if (resFb.ok && this.ctx) {
+              const arrayBufferFb = await resFb.arrayBuffer();
+              return await this.ctx.decodeAudioData(arrayBufferFb);
+            }
+          } catch {
+            // Silently ignore individual decode failure
+          }
+        }
+        return null;
+      });
+
+      const results = await Promise.all(loadPromises);
+      this.drawAudioBuffers = results.filter((b): b is AudioBuffer => b !== null);
+    } catch (e) {
+      console.warn("Could not preload draw audios:", e);
+    } finally {
+      this.isPreloadingDrawAudio = false;
     }
   }
 
@@ -219,6 +273,133 @@ export class AudioManager {
     } catch (e) {
       console.warn("Error playing exhale sound", e);
     }
+  }
+
+  /**
+   * Play one of the 6 draw audio clips randomly after a cigarette draw.
+   * Gracefully layers with soft procedural exhale and falls back to procedural
+   * audio if assets are loading or unavailable.
+   */
+  public playRandomDrawSound(): void {
+    if (this.isMuted) return;
+    this.unlock();
+    if (!this.ctx || !this.masterGain) return;
+
+    // Layer subtle atmospheric exhale breath
+    this.playExhale(1.6);
+
+    try {
+      if (this.drawAudioBuffers.length > 0) {
+        let nextIdx = Math.floor(Math.random() * this.drawAudioBuffers.length);
+        if (this.drawAudioBuffers.length > 1 && nextIdx === this.lastDrawAudioIndex) {
+          nextIdx = (nextIdx + 1) % this.drawAudioBuffers.length;
+        }
+        this.lastDrawAudioIndex = nextIdx;
+
+        const source = this.ctx.createBufferSource();
+        source.buffer = this.drawAudioBuffers[nextIdx];
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+
+        source.connect(gain);
+        gain.connect(this.masterGain);
+
+        source.start();
+        return;
+      }
+
+      // Fallback: If Web Audio buffers not yet ready, use HTML5 Audio element
+      if (typeof window !== "undefined") {
+        const randomIdx = Math.floor(Math.random() * AudioManager.DRAW_AUDIO_SOURCES.length);
+        const url = AudioManager.DRAW_AUDIO_SOURCES[randomIdx];
+        const audio = new Audio(url);
+        audio.volume = this.masterVolume;
+        audio.play().catch(() => {
+          // Fallback gracefully absorbed by playExhale
+        });
+      }
+    } catch (e) {
+      console.warn("Error playing random draw sound:", e);
+    }
+  }
+
+  /**
+   * Tactile click sound effect for selecting brands and UI controls.
+   * Produces an immediate, satisfying mechanical switch click.
+   */
+  public playBrandClick(): void {
+    if (this.isMuted) return;
+    this.unlock();
+    if (!this.ctx || !this.masterGain) return;
+
+    try {
+      const now = this.ctx.currentTime;
+
+      // 1. Sharp tactile pitch transient (snap)
+      const snapOsc = this.ctx.createOscillator();
+      const snapGain = this.ctx.createGain();
+      snapOsc.type = "sine";
+      snapOsc.frequency.setValueAtTime(2600, now);
+      snapOsc.frequency.exponentialRampToValueAtTime(500, now + 0.015);
+
+      snapGain.gain.setValueAtTime(0.35, now);
+      snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
+
+      snapOsc.connect(snapGain);
+      snapGain.connect(this.masterGain);
+      snapOsc.start(now);
+      snapOsc.stop(now + 0.02);
+
+      // 2. High-pass micro-noise click (tactile latch)
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.012);
+      const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      }
+      const noiseSource = this.ctx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+
+      const noiseFilter = this.ctx.createBiquadFilter();
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.setValueAtTime(3600, now);
+      noiseFilter.Q.setValueAtTime(3.0, now);
+
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.3, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.masterGain);
+      noiseSource.start(now);
+      noiseSource.stop(now + 0.015);
+
+      // 3. Subtle physical chassis thud (pack body resonance)
+      const thudOsc = this.ctx.createOscillator();
+      const thudGain = this.ctx.createGain();
+      thudOsc.type = "triangle";
+      thudOsc.frequency.setValueAtTime(220, now);
+      thudOsc.frequency.exponentialRampToValueAtTime(80, now + 0.025);
+
+      thudGain.gain.setValueAtTime(0.25, now);
+      thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.028);
+
+      thudOsc.connect(thudGain);
+      thudGain.connect(this.masterGain);
+      thudOsc.start(now);
+      thudOsc.stop(now + 0.03);
+    } catch (e) {
+      console.warn("Error playing brand click sound:", e);
+    }
+  }
+
+  /**
+   * Alias for general tactile click sound
+   */
+  public playClick(): void {
+    this.playBrandClick();
   }
 
   /**

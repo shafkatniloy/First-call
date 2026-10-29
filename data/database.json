@@ -1,0 +1,501 @@
+{
+  "version": 1,
+  "users": {
+    "habibbhai$": {
+      "id": "seed_1",
+      "name": "HabibBhai$",
+      "normalizedName": "habibbhai$",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 245,
+      "brandStats": {
+        "benson": 73
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "olddhaka#king": {
+      "id": "seed_2",
+      "name": "OldDhaka#King",
+      "normalizedName": "olddhaka#king",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 198,
+      "brandStats": {
+        "sheikh": 138,
+        "benson": 59
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "dhanmondi@7": {
+      "id": "seed_3",
+      "name": "Dhanmondi@7",
+      "normalizedName": "dhanmondi@7",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 176,
+      "brandStats": {
+        "marlboro": 123,
+        "benson": 52
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "bensonlover$": {
+      "id": "seed_4",
+      "name": "BensonLover$",
+      "normalizedName": "bensonlover$",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 154,
+      "brandStats": {
+        "benson": 46
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "chaicigarette#": {
+      "id": "seed_5",
+      "name": "ChaiCigarette#",
+      "normalizedName": "chaicigarette#",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 139,
+      "brandStats": {
+        "gold-leaf": 97,
+        "benson": 41
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "tongismoker@": {
+      "id": "seed_6",
+      "name": "TongiSmoker@",
+      "normalizedName": "tongismoker@",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 122,
+      "brandStats": {
+        "derby": 85,
+        "benson": 36
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "rony$boss": {
+      "id": "seed_7",
+      "name": "Rony$Boss",
+      "normalizedName": "rony$boss",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 110,
+      "brandStats": {
+        "sheikh": 77,
+        "benson": 33
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "mamun#dhaka": {
+      "id": "seed_8",
+      "name": "Mamun#Dhaka",
+      "normalizedName": "mamun#dhaka",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 95,
+      "brandStats": {
+        "marpolo": 66,
+        "benson": 28
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "shanto@adda": {
+      "id": "seed_9",
+      "name": "Shanto@Adda",
+      "normalizedName": "shanto@adda",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 84,
+      "brandStats": {
+        "benson": 25
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "gulshan#night": {
+      "id": "seed_10",
+      "name": "Gulshan#Night",
+      "normalizedName": "gulshan#night",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 72,
+      "brandStats": {
+        "marlboro": 50,
+        "benson": 21
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "puranapaltan$": {
+      "id": "seed_11",
+      "name": "PuranaPaltan$",
+      "normalizedName": "puranapaltan$",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 63,
+      "brandStats": {
+        "gold-leaf": 44,
+        "benson": 18
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "babubazar@": {
+      "id": "seed_12",
+      "name": "BabuBazar@",
+      "normalizedName": "babubazar@",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 58,
+      "brandStats": {
+        "sheikh": 40,
+        "benson": 17
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "mirpur10#chai": {
+      "id": "seed_13",
+      "name": "Mirpur10#Chai",
+      "normalizedName": "mirpur10#chai",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 47,
+      "brandStats": {
+        "derby": 32,
+        "benson": 14
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "azimpur$": {
+      "id": "seed_14",
+      "name": "Azimpur$",
+      "normalizedName": "azimpur$",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 39,
+      "brandStats": {
+        "benson": 11
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "farmgate@adda": {
+      "id": "seed_15",
+      "name": "Farmgate@Adda",
+      "normalizedName": "farmgate@adda",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 31,
+      "brandStats": {
+        "marpolo": 21,
+        "benson": 9
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "mohakhali#king": {
+      "id": "seed_16",
+      "name": "Mohakhali#King",
+      "normalizedName": "mohakhali#king",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 25,
+      "brandStats": {
+        "sheikh": 17,
+        "benson": 7
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "banani$vibe": {
+      "id": "seed_17",
+      "name": "Banani$Vibe",
+      "normalizedName": "banani$vibe",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 18,
+      "brandStats": {
+        "marlboro": 12,
+        "benson": 5
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "uttara@sector4": {
+      "id": "seed_18",
+      "name": "Uttara@Sector4",
+      "normalizedName": "uttara@sector4",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 12,
+      "brandStats": {
+        "gold-leaf": 8,
+        "benson": 3
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "rampura#tea": {
+      "id": "seed_19",
+      "name": "Rampura#Tea",
+      "normalizedName": "rampura#tea",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 8,
+      "brandStats": {
+        "benson": 2
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "shahbag$": {
+      "id": "seed_20",
+      "name": "Shahbag$",
+      "normalizedName": "shahbag$",
+      "createdAt": "2026-10-29T10:37:47.481Z",
+      "totalBurnt": 5,
+      "brandStats": {
+        "sheikh": 3,
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:37:47.481Z"
+    },
+    "testuser_1793270267436#$": {
+      "id": "usr_1793270267483_waw42",
+      "name": "TestUser_1793270267436#$",
+      "normalizedName": "testuser_1793270267436#$",
+      "createdAt": "2026-10-29T10:37:47.483Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:37:47.483Z"
+    },
+    "testuser_1793270298502#$": {
+      "id": "usr_1793270298514_4fo7k",
+      "name": "TestUser_1793270298502#$",
+      "normalizedName": "testuser_1793270298502#$",
+      "createdAt": "2026-10-29T10:38:18.514Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:38:18.517Z"
+    },
+    "testuser_1793270726272#$": {
+      "id": "usr_1793270726285_vjdmb",
+      "name": "TestUser_1793270726272#$",
+      "normalizedName": "testuser_1793270726272#$",
+      "createdAt": "2026-10-29T10:45:26.285Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:45:26.288Z"
+    },
+    "testuser_1793270806553#$": {
+      "id": "usr_1793270806566_l6v8m",
+      "name": "TestUser_1793270806553#$",
+      "normalizedName": "testuser_1793270806553#$",
+      "createdAt": "2026-10-29T10:46:46.566Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:46:46.570Z"
+    },
+    "niloy": {
+      "id": "usr_1793270891991_uwsfn",
+      "name": "Niloy",
+      "normalizedName": "niloy",
+      "createdAt": "2026-10-29T10:48:11.991Z",
+      "totalBurnt": 3,
+      "brandStats": {
+        "marlboro": 2,
+        "dunhill": 1
+      },
+      "lastActive": "2026-10-29T15:44:04.896Z"
+    },
+    "testuser_1793271460314#$": {
+      "id": "usr_1793271460327_4d79f",
+      "name": "TestUser_1793271460314#$",
+      "normalizedName": "testuser_1793271460314#$",
+      "createdAt": "2026-10-29T10:57:40.326Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T10:57:40.330Z"
+    },
+    "testuser_1793272598776#$": {
+      "id": "usr_1793272598784_mf2j1",
+      "name": "TestUser_1793272598776#$",
+      "normalizedName": "testuser_1793272598776#$",
+      "createdAt": "2026-10-29T11:16:38.783Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T11:16:38.786Z"
+    },
+    "testuser_1793272684871#$": {
+      "id": "usr_1793272684886_4110q",
+      "name": "TestUser_1793272684871#$",
+      "normalizedName": "testuser_1793272684871#$",
+      "createdAt": "2026-10-29T11:18:04.885Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T11:18:04.892Z"
+    },
+    "testuser_1793285013916#$": {
+      "id": "usr_1793285013928_4x3fo",
+      "name": "TestUser_1793285013916#$",
+      "normalizedName": "testuser_1793285013916#$",
+      "createdAt": "2026-10-29T14:43:33.927Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T14:43:33.931Z"
+    },
+    "testuser_1793285105834#$": {
+      "id": "usr_1793285105848_5nk79",
+      "name": "TestUser_1793285105834#$",
+      "normalizedName": "testuser_1793285105834#$",
+      "createdAt": "2026-10-29T14:45:05.847Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T14:45:05.850Z"
+    },
+    "testuser_1793288810841#$": {
+      "id": "usr_1793288810853_2yp4i",
+      "name": "TestUser_1793288810841#$",
+      "normalizedName": "testuser_1793288810841#$",
+      "createdAt": "2026-10-29T15:46:50.852Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T15:46:50.856Z"
+    },
+    "testuser_1793289016322#$": {
+      "id": "usr_1793289016337_9ztw0",
+      "name": "TestUser_1793289016322#$",
+      "normalizedName": "testuser_1793289016322#$",
+      "createdAt": "2026-10-29T15:50:16.337Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T15:50:16.341Z"
+    }
+  },
+  "burns": [
+    {
+      "id": "burn_1793270267483_rf5uj",
+      "userName": "TestUser_1793270267436#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T10:37:47.483Z"
+    },
+    {
+      "id": "burn_1793270298517_k35hr",
+      "userName": "TestUser_1793270298502#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T10:38:18.517Z"
+    },
+    {
+      "id": "burn_1793270726288_2mx5c",
+      "userName": "TestUser_1793270726272#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T10:45:26.288Z"
+    },
+    {
+      "id": "burn_1793270806570_l4ucj",
+      "userName": "TestUser_1793270806553#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T10:46:46.570Z"
+    },
+    {
+      "id": "burn_1793270933894_aiebk",
+      "userName": "Niloy",
+      "brandId": "marlboro",
+      "brandName": "Marlboro Red",
+      "draws": 0,
+      "durationSeconds": 27,
+      "timestamp": "2026-10-29T10:48:53.893Z"
+    },
+    {
+      "id": "burn_1793271460330_gxlaf",
+      "userName": "TestUser_1793271460314#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T10:57:40.330Z"
+    },
+    {
+      "id": "burn_1793272598786_t843z",
+      "userName": "TestUser_1793272598776#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T11:16:38.786Z"
+    },
+    {
+      "id": "burn_1793272684892_aspgj",
+      "userName": "TestUser_1793272684871#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T11:18:04.892Z"
+    },
+    {
+      "id": "burn_1793284366523_8q3lu",
+      "userName": "Niloy",
+      "brandId": "marlboro",
+      "brandName": "Marlboro Red",
+      "draws": 3,
+      "durationSeconds": 29,
+      "timestamp": "2026-10-29T14:32:46.523Z"
+    },
+    {
+      "id": "burn_1793285013931_ijrs9",
+      "userName": "TestUser_1793285013916#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T14:43:33.931Z"
+    },
+    {
+      "id": "burn_1793285105850_xe7mf",
+      "userName": "TestUser_1793285105834#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T14:45:05.850Z"
+    },
+    {
+      "id": "burn_1793288644896_xfvmz",
+      "userName": "Niloy",
+      "brandId": "dunhill",
+      "brandName": "Dunhill",
+      "draws": 2,
+      "durationSeconds": 61,
+      "timestamp": "2026-10-29T15:44:04.896Z"
+    },
+    {
+      "id": "burn_1793288810856_ltpkz",
+      "userName": "TestUser_1793288810841#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T15:46:50.856Z"
+    },
+    {
+      "id": "burn_1793289016341_3boqs",
+      "userName": "TestUser_1793289016322#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T15:50:16.341Z"
+    }
+  ]
+}

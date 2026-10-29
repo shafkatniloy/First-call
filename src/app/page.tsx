@@ -1,186 +1,309 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import {
-  Flame,
-  BarChart3,
-  Volume2,
-  VolumeX,
-  Eye,
-  ArrowRight,
-  ShieldAlert,
-  Sparkles,
-  Wind,
-} from "lucide-react";
+import React, { useReducer, useEffect, useRef, useState, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
+import { sessionReducer, initialSessionContext } from "@/features/session/sessionStateMachine";
+import { BRANDS, getBrandById } from "@/config/brands.config";
+import { ENVIRONMENTS, getEnvironmentById } from "@/config/environments.config";
 import { APP_CONFIG } from "@/config/app.config";
-import { BRANDS } from "@/config/brands.config";
+import { audioManager } from "@/features/audio/audioManager";
 import { StorageManager } from "@/lib/storage/localStorage";
+import { GlassRitualControls } from "@/components/session-controls/GlassRitualControls";
+import { SessionCompletion } from "@/components/session-controls/SessionCompletion";
+import { UserNameModal } from "@/components/auth/UserNameModal";
 
-export default function LandingPage() {
-  const [soundEnabled, setSoundEnabled] = useState(true);
+const DhakaSceneCanvas = dynamic(
+  () =>
+    import("@/components/immersive-scene/DhakaSceneCanvas").then(
+      (mod) => mod.DhakaSceneCanvas
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 bg-charcoal-950 flex flex-col items-center justify-center text-neutral-400 font-mono text-xs gap-2 select-none">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+          <span>Entering Dhaka scene...</span>
+        </div>
+        <div className="text-[11px] text-neutral-400 font-mono tracking-wide mt-1">
+          free server, wait 10 seconds if not responding
+        </div>
+      </div>
+    ),
+  }
+);
+
+function RitualStartingPageContent() {
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("marlboro");
+  const [selectedEnvId, setSelectedEnvId] = useState<string>("rainy-window");
+  const [drawCount, setDrawCount] = useState<6 | 7>(7);
+
+  const brand = getBrandById(selectedBrandId);
+  const environment = getEnvironmentById(selectedEnvId);
+
+  const [state, dispatch] = useReducer(
+    sessionReducer,
+    initialSessionContext(brand.id, drawCount, environment.id)
+  );
+
+  const [isMuted, setIsMuted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
+  // Load saved preferences and username on mount
   useEffect(() => {
+    const savedUser = localStorage.getItem("vesper_user_name");
+    if (savedUser) {
+      setUserName(savedUser);
+    } else {
+      setIsUserModalOpen(true);
+    }
+
     const prefs = StorageManager.load().preferences;
-    setSoundEnabled(prefs.soundEnabled);
+    if (prefs.lastSelectedBrand) setSelectedBrandId(prefs.lastSelectedBrand);
+    if (prefs.lastSelectedEnvironment) setSelectedEnvId(prefs.lastSelectedEnvironment);
+    if (prefs.preferredDrawCount) setDrawCount(prefs.preferredDrawCount);
+
+    setIsMuted(!prefs.soundEnabled);
+    audioManager.setMuted(!prefs.soundEnabled);
+    audioManager.setMasterVolume(prefs.masterVolume);
+    audioManager.setAmbientVolume(prefs.ambientVolume);
     setReducedMotion(prefs.reducedMotion);
+
+    if (prefs.ambientSoundEnabled && prefs.soundEnabled) {
+      audioManager.startAmbient(environment.ambientSound);
+    }
+
+    return () => {
+      audioManager.stopAmbient();
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+    };
   }, []);
 
-  const handleToggleSound = () => {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    StorageManager.updatePreferences({ soundEnabled: next });
-  };
+  // Update ambient soundscape when environment changes
+  useEffect(() => {
+    const prefs = StorageManager.load().preferences;
+    if (prefs.ambientSoundEnabled && prefs.soundEnabled) {
+      audioManager.startAmbient(environment.ambientSound);
+    }
+  }, [environment.ambientSound]);
 
-  const handleToggleMotion = () => {
-    const next = !reducedMotion;
-    setReducedMotion(next);
-    StorageManager.updatePreferences({ reducedMotion: next });
-  };
+  // Track session duration while actively smoking
+  useEffect(() => {
+    if (state.state !== "idle" && state.state !== "completed" && state.state !== "paused") {
+      elapsedTimerRef.current = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+    }
+    return () => {
+      if (elapsedTimerRef.current) clearInterval(elapsedTimerRef.current);
+    };
+  }, [state.state]);
+
+  // Auto-pause if tab changes visibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && (state.state === "ready" || state.state === "inhaling")) {
+        dispatch({ type: "PAUSE" });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [state.state]);
+
+  // Handle ritual state-machine transitions and procedural audio
+  useEffect(() => {
+    if (state.state === "lighting") {
+      audioManager.playLighter();
+      timerRef.current = setTimeout(() => {
+        dispatch({ type: "LIGHT_COMPLETE" });
+      }, APP_CONFIG.drawDurations.lightingMs);
+    } else if (state.state === "inhaling") {
+      audioManager.playInhale(APP_CONFIG.drawDurations.inhaleMs / 1000);
+      timerRef.current = setTimeout(() => {
+        dispatch({ type: "INHALE_COMPLETE" });
+      }, APP_CONFIG.drawDurations.inhaleMs);
+    } else if (state.state === "recovering") {
+      audioManager.playRandomDrawSound();
+      timerRef.current = setTimeout(() => {
+        dispatch({ type: "RECOVER_COMPLETE" });
+      }, APP_CONFIG.drawDurations.recoverMs);
+    } else if (state.state === "completed") {
+      audioManager.playCompletion();
+      StorageManager.recordVirtualSession(state.currentDraw);
+
+      const activeUser = userName || localStorage.getItem("vesper_user_name");
+      if (activeUser) {
+        fetch("/api/burns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: activeUser,
+            brandId: brand.id,
+            brandName: brand.name,
+            draws: state.currentDraw,
+            durationSeconds: elapsedSeconds,
+          }),
+        }).catch((err) => console.error("Failed to record burnt cigarette:", err));
+      }
+    }
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [state.state, state.currentDraw]);
+
+  // Selection Handlers (Instant Real-time Updates)
+  const handleSelectBrand = useCallback((brandId: string) => {
+    audioManager.playBrandClick();
+    setSelectedBrandId(brandId);
+    StorageManager.updatePreferences({ lastSelectedBrand: brandId });
+    dispatch({ type: "RESET", brandId, totalDraws: drawCount, environmentId: selectedEnvId });
+  }, [drawCount, selectedEnvId]);
+
+  const handleSelectEnvironment = useCallback((envId: string) => {
+    audioManager.playClick();
+    setSelectedEnvId(envId);
+    StorageManager.updatePreferences({ lastSelectedEnvironment: envId });
+    dispatch({ type: "RESET", brandId: selectedBrandId, totalDraws: drawCount, environmentId: envId });
+  }, [selectedBrandId, drawCount]);
+
+  const handleSelectDrawCount = useCallback((count: 6 | 7) => {
+    audioManager.playClick();
+    setDrawCount(count);
+    StorageManager.updatePreferences({ preferredDrawCount: count });
+    dispatch({ type: "RESET", brandId: selectedBrandId, totalDraws: count, environmentId: selectedEnvId });
+  }, [selectedBrandId, selectedEnvId]);
+
+  // Ritual Handlers
+  const handleLight = useCallback(() => {
+    audioManager.unlock();
+    dispatch({ type: "LIGHT" });
+  }, []);
+
+  const handleInhale = useCallback(() => {
+    audioManager.unlock();
+    dispatch({ type: "INHALE" });
+  }, []);
+
+  const handlePause = useCallback(() => {
+    dispatch({ type: "PAUSE" });
+  }, []);
+
+  const handleResume = useCallback(() => {
+    dispatch({ type: "RESUME" });
+  }, []);
+
+  const handleFinishEarly = useCallback(() => {
+    dispatch({ type: "FINISH_EARLY" });
+  }, []);
+
+  const handleToggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      audioManager.setMuted(next);
+      StorageManager.updatePreferences({ soundEnabled: !next });
+      return next;
+    });
+  }, []);
+
+  const handleToggleMotion = useCallback(() => {
+    setReducedMotion((prev) => {
+      const next = !prev;
+      StorageManager.updatePreferences({ reducedMotion: next });
+      return next;
+    });
+  }, []);
+
+  const handleRestart = useCallback(() => {
+    setElapsedSeconds(0);
+    dispatch({ type: "RESET", brandId: brand.id, totalDraws: drawCount, environmentId: environment.id });
+  }, [brand.id, drawCount, environment.id]);
 
   return (
-    <div className="min-h-screen bg-charcoal-950 text-neutral-100 flex flex-col justify-between p-4 sm:p-8 relative overflow-hidden select-none">
-      {/* Background ambient lighting falloff */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-600/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 left-10 w-96 h-96 bg-red-600/5 rounded-full blur-[120px] pointer-events-none" />
+    <main className="relative w-screen h-[100dvh] overflow-hidden bg-black select-none fixed inset-0">
+      {/* 1. Full-Viewport 3D Retro Dhaka Street Experience */}
+      <DhakaSceneCanvas
+        state={state.state}
+        brand={brand}
+        environment={environment}
+        currentDraw={state.currentDraw}
+        totalDraws={state.totalDraws}
+        reducedMotion={reducedMotion}
+      />
 
-      {/* Top Navbar */}
-      <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 z-10">
-        <div className="flex items-center gap-3">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden border border-amber-500/30 shadow-ember">
-            <Image
-              src="/assets/brand-icon.jpg"
-              alt={APP_CONFIG.name}
-              fill
-              className="object-cover"
-            />
-          </div>
-          <span className="font-serif text-lg font-bold tracking-widest text-white uppercase">
-            {APP_CONFIG.name}
-          </span>
+      {/* 2. Glass UI Controls: Brand & Weather Selection + Interactive Ritual Dock */}
+      <GlassRitualControls
+        state={state.state}
+        brand={brand}
+        environment={environment}
+        allBrands={BRANDS}
+        allEnvironments={ENVIRONMENTS}
+        drawCount={drawCount}
+        currentDraw={state.currentDraw}
+        totalDraws={state.totalDraws}
+        isMuted={isMuted}
+        reducedMotion={reducedMotion}
+        currentUserName={userName}
+        onOpenUserModal={() => setIsUserModalOpen(true)}
+        onSelectBrand={handleSelectBrand}
+        onSelectEnvironment={handleSelectEnvironment}
+        onSelectDrawCount={handleSelectDrawCount}
+        onLight={handleLight}
+        onInhale={handleInhale}
+        onPause={handlePause}
+        onResume={handleResume}
+        onFinishEarly={handleFinishEarly}
+        onToggleMute={handleToggleMute}
+        onToggleMotion={handleToggleMotion}
+      />
+
+      {/* 3. Session Completion Glass Modal */}
+      {state.state === "completed" && (
+        <SessionCompletion
+          brand={brand}
+          environment={environment}
+          drawsCompleted={state.currentDraw}
+          totalDraws={state.totalDraws}
+          elapsedSeconds={elapsedSeconds}
+          userName={userName}
+          onRestart={handleRestart}
+          onHome={handleRestart}
+        />
+      )}
+
+      {/* 4. Mandatory Unique User Name Registration Modal */}
+      <UserNameModal
+        isOpen={isUserModalOpen}
+        canDismiss={!!userName}
+        onSuccess={(name) => {
+          setUserName(name);
+          localStorage.setItem("vesper_user_name", name);
+          setIsUserModalOpen(false);
+        }}
+        onClose={() => setIsUserModalOpen(false)}
+      />
+    </main>
+  );
+}
+
+export default function StartingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-screen h-[100dvh] bg-charcoal-950 flex items-center justify-center text-neutral-400 font-mono text-xs">
+          Loading First Call Dhaka Scene...
         </div>
-
-        {/* Minimal Audio & Accessibility Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleToggleSound}
-            aria-label={soundEnabled ? "Disable sound" : "Enable sound"}
-            className="p-2.5 rounded-full bg-charcoal-900/80 backdrop-blur-md border border-white/10 text-neutral-300 hover:text-white transition-all text-xs flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            <span className="hidden sm:inline font-mono text-[11px]">
-              {soundEnabled ? "Audio On" : "Muted"}
-            </span>
-          </button>
-
-          <button
-            onClick={handleToggleMotion}
-            aria-label={reducedMotion ? "Enable full motion" : "Reduce motion"}
-            className={`p-2.5 rounded-full backdrop-blur-md border transition-all text-xs flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-              reducedMotion
-                ? "bg-amber-600/30 text-amber-300 border-amber-500/50"
-                : "bg-charcoal-900/80 border-white/10 text-neutral-400 hover:text-neutral-200"
-            }`}
-          >
-            <Eye size={16} />
-            <span className="hidden sm:inline font-mono text-[11px]">
-              {reducedMotion ? "Reduced Motion" : "Motion"}
-            </span>
-          </button>
-
-          <Link
-            href="/progress"
-            className="p-2.5 sm:px-4 sm:py-2 rounded-full bg-charcoal-900/80 backdrop-blur-md border border-white/10 text-neutral-300 hover:text-white hover:border-amber-500/40 transition-all text-xs font-mono flex items-center gap-2"
-          >
-            <BarChart3 size={16} className="text-amber-400" />
-            <span className="hidden sm:inline">My Progress</span>
-          </Link>
-        </div>
-      </header>
-
-      {/* Main Hero Section */}
-      <main className="w-full max-w-4xl mx-auto flex-1 flex flex-col items-center justify-center text-center py-12 z-10">
-        {/* Emblem Badge */}
-        <div className="relative mb-6 group">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-2 border-amber-500/40 shadow-ember group-hover:shadow-ember-intense transition-all duration-500">
-            <Image
-              src="/assets/brand-icon.jpg"
-              alt="Vesper Emblem"
-              fill
-              priority
-              className="object-cover"
-            />
-          </div>
-          <div className="absolute -bottom-2 inset-x-0 flex justify-center">
-            <span className="bg-charcoal-900 border border-amber-500/30 text-[9px] font-mono tracking-widest text-amber-300 uppercase px-2.5 py-0.5 rounded-full shadow-lg">
-              Digital Ritual
-            </span>
-          </div>
-        </div>
-
-        {/* Primary Typography */}
-        <h1 className="font-serif text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-4 max-w-2xl leading-tight">
-          The Ritual You Know.
-          <br />
-          <span className="bg-gradient-to-r from-amber-200 via-orange-400 to-amber-500 bg-clip-text text-transparent">
-            Without The Smoke.
-          </span>
-        </h1>
-
-        <p className="text-sm sm:text-base text-neutral-300 max-w-lg mb-8 font-sans leading-relaxed">
-          {APP_CONFIG.tagline} {APP_CONFIG.subtext}
-        </p>
-
-        {/* Primary Call to Action */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mb-10 w-full max-w-sm justify-center">
-          <Link
-            href="/select"
-            className="w-full sm:w-auto flex-1 py-4 px-8 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white font-serif font-bold text-sm tracking-widest uppercase shadow-ember hover:shadow-ember-intense transition-all duration-300 border border-amber-400/40 flex items-center justify-center gap-3 active:scale-95"
-          >
-            <Flame size={18} className="text-amber-200" />
-            <span>Start Session</span>
-            <ArrowRight size={16} />
-          </Link>
-
-          <Link
-            href="/progress"
-            className="w-full sm:w-auto py-4 px-6 rounded-full bg-charcoal-900/90 hover:bg-charcoal-800 text-neutral-200 font-sans font-medium text-xs tracking-wider uppercase border border-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2"
-          >
-            <BarChart3 size={15} />
-            <span>Track Progress</span>
-          </Link>
-        </div>
-
-        {/* Brand Preview Pills */}
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-            Selectable Virtual Blends
-          </span>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {BRANDS.map((b) => (
-              <span
-                key={b.id}
-                className="px-3 py-1 rounded-full bg-charcoal-900/70 border border-white/5 text-neutral-400 text-xs font-serif flex items-center gap-1.5"
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: b.accentColor }}
-                />
-                {b.name}
-              </span>
-            ))}
-          </div>
-        </div>
-      </main>
-
-      {/* Transparent Harm Reduction Statement */}
-      <footer className="w-full max-w-4xl mx-auto py-4 text-center z-10 border-t border-neutral-900">
-        <p className="text-[11px] text-neutral-400 max-w-xl mx-auto leading-relaxed">
-          {APP_CONFIG.disclaimer}
-        </p>
-      </footer>
-    </div>
+      }
+    >
+      <RitualStartingPageContent />
+    </Suspense>
   );
 }

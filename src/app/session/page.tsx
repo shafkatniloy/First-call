@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useReducer, useEffect, useRef, useState, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams, useRouter } from "next/navigation";
 import { sessionReducer, initialSessionContext } from "@/features/session/sessionStateMachine";
 import { getBrandById } from "@/config/brands.config";
@@ -8,9 +9,23 @@ import { getEnvironmentById } from "@/config/environments.config";
 import { APP_CONFIG } from "@/config/app.config";
 import { audioManager } from "@/features/audio/audioManager";
 import { StorageManager } from "@/lib/storage/localStorage";
-import { DhakaSceneCanvas } from "@/components/immersive-scene/DhakaSceneCanvas";
 import { SessionHUD } from "@/components/session-controls/SessionHUD";
 import { SessionCompletion } from "@/components/session-controls/SessionCompletion";
+
+const DhakaSceneCanvas = dynamic(
+  () =>
+    import("@/components/immersive-scene/DhakaSceneCanvas").then(
+      (mod) => mod.DhakaSceneCanvas
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 bg-charcoal-950 flex items-center justify-center text-neutral-500 font-mono text-xs">
+        Entering Dhaka scene...
+      </div>
+    ),
+  }
+);
 
 function SessionContent() {
   const router = useRouter();
@@ -94,7 +109,7 @@ function SessionContent() {
         dispatch({ type: "INHALE_COMPLETE" });
       }, APP_CONFIG.drawDurations.inhaleMs);
     } else if (state.state === "recovering") {
-      audioManager.playExhale(APP_CONFIG.drawDurations.recoverMs / 1000);
+      audioManager.playRandomDrawSound();
       timerRef.current = setTimeout(() => {
         dispatch({ type: "RECOVER_COMPLETE" });
       }, APP_CONFIG.drawDurations.recoverMs);
@@ -102,6 +117,21 @@ function SessionContent() {
       audioManager.playCompletion();
       // Record completed virtual session in storage
       StorageManager.recordVirtualSession(state.currentDraw);
+
+      const savedUser = typeof window !== "undefined" ? localStorage.getItem("vesper_user_name") : null;
+      if (savedUser) {
+        fetch("/api/burns", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: savedUser,
+            brandId: brand.id,
+            brandName: brand.name,
+            draws: state.currentDraw,
+            durationSeconds: elapsedSeconds,
+          }),
+        }).catch((err) => console.error("Failed to record burnt cigarette:", err));
+      }
     }
 
     return () => {
@@ -156,6 +186,7 @@ function SessionContent() {
       <DhakaSceneCanvas
         state={state.state}
         brand={brand}
+        environment={environment}
         currentDraw={state.currentDraw}
         totalDraws={state.totalDraws}
         reducedMotion={reducedMotion}
@@ -186,7 +217,9 @@ function SessionContent() {
           drawsCompleted={state.currentDraw}
           totalDraws={state.totalDraws}
           elapsedSeconds={elapsedSeconds}
+          userName={typeof window !== "undefined" ? localStorage.getItem("vesper_user_name") || undefined : undefined}
           onRestart={handleRestart}
+          onHome={handleExit}
         />
       )}
     </main>

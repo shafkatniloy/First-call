@@ -1,37 +1,78 @@
-# Graphics Performance & Optimization: Retro Dhaka 3D Environment
+# Graphics performance and optimization: retro Dhaka 3D environment
 
-## 1. Performance Goals & Hardware Targets
-The 3D environment is engineered to run at a consistent **60 FPS** across mid-range laptops, integrated graphics (Intel Iris / Apple M-series), and mobile browsers (iOS Safari, Android Chrome).
+This document outlines the performance benchmarks, polygon budgets, shader
+optimizations, and device pixel ratio safeguards implemented in the real-time
+Dhaka 3D engine.
 
----
+## Performance goals and hardware targets
 
-## 2. Optimization Techniques Applied
+The 3D environment is engineered to maintain a steady 60 frames per second
+across mid-range laptops, integrated graphics chips (such as Intel Iris Xe and
+Apple M-series), and mobile browsers (iOS Safari, Android Chrome).
 
-### A. Low-to-Medium Polygon Budget
-- Total scene geometry: **< 3,500 triangles**.
-- Hand & Cigarette viewmodel: **< 300 triangles**.
-- Road & sidewalk: **< 20 triangles**.
-- Allows smooth rendering even on low-power mobile GPUs without frame dropping.
-
-### B. Procedural Canvas Textures (Zero Download Overhead)
-- All signboards, road markings, and textures are painted to small HTML5 canvases (128x256 to 512x512) and uploaded as `THREE.CanvasTexture` during initialization.
-- Saves over 15MB of image downloads and eliminates texture network lag.
-
-### C. Restrained Shadow Casting
-- `castShadow` is strictly limited to key focal objects (the directional moonlight, the tea stall interior light, and immediate utility poles).
-- Shadow map resolution is clamped to `1024x1024` with `THREE.PCFSoftShadowMap` filtering for soft, realistic contact shadows without GPU strain.
-
-### D. Hardware Device Pixel Ratio Clamping
-- `renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))` prevents mobile retina screens (which can report DPR 3 or 4) from rendering 9x superfluous pixels, protecting battery life and preventing thermal throttling.
-
-### E. Single-Draw Point Cloud Particle Simulation
-- Both 3D smoke and rain use `THREE.Points` and `THREE.LineSegments` backed by single Float32Array buffer attributes (`BufferGeometry`), executing in a single GPU draw call each.
+The engine prioritizes battery longevity and thermal efficiency during daily
+mindful sessions.
 
 ---
 
-## 3. Reduced Motion & Battery Saver Mode
-When `reducedMotion` is enabled (either via system preferences or in the app's settings):
-- Camera look-around sway is frozen.
+## Optimization techniques applied
+
+Multiple rendering optimizations keep memory consumption under 80MB and GPU
+load negligible.
+
+### Low-to-medium polygon budget
+
+Geometry is optimized to balance retro styling with minimal draw calls:
+
+- Total street scene geometry: **< 3,500 triangles**.
+- First-person cigarette viewmodel: **< 250 triangles**.
+- Roadway, sidewalks, and curbs: **< 30 triangles**.
+
+This low overhead enables smooth frame pacing even on low-power mobile GPUs
+without dropped frames.
+
+### Procedural canvas textures (zero download overhead)
+
+All storefront signboards, rickshaw folk art, and wet asphalt textures are
+drawn programmatically onto small HTML5 canvases (128x256 to 512x512) and
+uploaded as `THREE.CanvasTexture` instances during startup.
+
+This eliminates over 15MB of image downloads and prevents network texture pop-in.
+
+### Restrained shadow casting
+
+Shadow computations are restricted to key focal points:
+
+- Only the directional moonlight, the tea stall interior bulb, and adjacent
+  utility poles cast dynamic shadows.
+- Shadow map resolution is clamped to `1024x1024` with `THREE.PCFSoftShadowMap`
+  filtering for soft contact shadows without GPU strain.
+
+### Hardware device pixel ratio clamping
+
+High-DPI retina screens on modern phones can report device pixel ratios of 3 or
+4, which would force the browser to compute nine to sixteen times more pixels.
+The engine clamps the ratio:
+
+```typescript
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+```
+
+This prevents excessive battery drain and avoids mobile thermal throttling.
+
+### Single-draw buffer geometry particle simulations
+
+Both 3D rising smoke and falling rain utilize `THREE.Points` and
+`THREE.LineSegments` backed by single `Float32Array` buffer attributes,
+executing in a single GPU draw call each.
+
+---
+
+## Reduced motion and battery saver mode
+
+When reduced motion is enabled (via system preferences or in-app settings), the
+engine adapts:
+
+- Camera breathing sway and Lissajous idle motion are disabled.
 - Rain particle simulation is paused.
-- Hand movement shifts from spring interpolation to gentle crossfades.
-
+- Inhale transitions use gentle crossfades rather than rapid spatial transforms.

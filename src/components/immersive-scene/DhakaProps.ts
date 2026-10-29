@@ -126,26 +126,51 @@ export class DhakaProps {
       group.add(leg);
     });
 
-    // 7. Bengali Signboard Above Stall
+    // 7. Bengali Signboard Above Stall ("হাবিব ভাই এর চা এর দোকান")
     const signTex = ProceduralTextures.createBengaliSign(
-      "ভাই ভাই টি স্টল",
-      "স্পেশাল মালাই চা ও বিস্কুট",
+      "হাবিব ভাই এর চা এর দোকান",
+      "স্পেশাল মালাই চা ও টোস্ট বিস্কুট",
       "বিসমিল্লাহির রাহমানির রাহীম",
-      "#1e1b4b",
-      "#fef08a",
+      "#181206",
+      "#fffbeb",
       "#f59e0b",
       true
     );
-    const signGeo = new THREE.PlaneGeometry(2.1, 0.65);
+    const signGeo = new THREE.PlaneGeometry(2.35, 0.74);
     const signMat = new THREE.MeshStandardMaterial({
       map: signTex,
-      emissive: new THREE.Color(0xf59e0b),
-      emissiveIntensity: 0.35,
-      roughness: 0.4,
+      emissiveMap: signTex,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.92,
+      roughness: 0.25,
     });
     const sign = new THREE.Mesh(signGeo, signMat);
-    sign.position.set(0, 2.1, 0.92);
+    sign.position.set(0, 2.12, 0.92);
     group.add(sign);
+
+    // 7b. Street Poster pasted on side of tea stall counter
+    const stallPosterTex = ProceduralTextures.createStreetPoster(
+      "বিশেষ ঘোষণা",
+      "মালাই চা",
+      "খাঁটি গরুর দুধের স্পেশাল মালাই\nপ্রতি কাপ মাত্র ১০ টাকা",
+      "হাবিব টি স্টল • ঢাকা",
+      "#fef9c3",
+      "#b91c1c",
+      "#1e1b4b"
+    );
+    const stallPoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.48, 0.68),
+      new THREE.MeshStandardMaterial({
+        map: stallPosterTex,
+        emissiveMap: stallPosterTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.45,
+        roughness: 0.85,
+      })
+    );
+    stallPoster.position.set(-0.85, 0.52, 0.76);
+    stallPoster.rotation.y = -Math.PI / 2;
+    group.add(stallPoster);
 
     // 8. Hanging Bare Tungsten Bulb with Warm Point Light
     const bulb = new THREE.Mesh(

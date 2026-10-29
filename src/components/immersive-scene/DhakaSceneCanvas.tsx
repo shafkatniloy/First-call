@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { SessionState } from "@/types/session";
 import { BrandConfig } from "@/types/brand";
+import { EnvironmentConfig } from "@/types/environment";
 import { SceneWorld } from "./SceneWorld";
 import { CameraController } from "./CameraController";
 import { FirstPersonHand3D } from "./FirstPersonHand3D";
@@ -13,6 +14,7 @@ import { DHAKA_SCENE_CONFIG } from "@/config/dhakaScene.config";
 interface DhakaSceneCanvasProps {
   state: SessionState;
   brand: BrandConfig;
+  environment?: EnvironmentConfig;
   currentDraw: number;
   totalDraws: number;
   reducedMotion?: boolean;
@@ -21,61 +23,25 @@ interface DhakaSceneCanvasProps {
 export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
   state,
   brand,
+  environment,
   currentDraw,
   totalDraws,
   reducedMotion = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const handRef = useRef<FirstPersonHand3D | null>(null);
+  const weatherAndSmokeRef = useRef<SmokeParticles3D | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
   const stateRef = useRef<SessionState>(state);
   const currentDrawRef = useRef<number>(currentDraw);
   const totalDrawsRef = useRef<number>(totalDraws);
-
-  // Mouse cursor hidden state
-  const [isPointerHidden, setIsPointerHidden] = useState<boolean>(false);
 
   // Keep refs in sync with props for the animation loop
   useEffect(() => {
     stateRef.current = state;
     currentDrawRef.current = currentDraw;
     totalDrawsRef.current = totalDraws;
-
-    // Automatically hide cursor when entering active smoking states
-    if (state === "lighting" || state === "ready" || state === "inhaling") {
-      setIsPointerHidden(true);
-    } else if (state === "completed" || state === "paused") {
-      setIsPointerHidden(false);
-    }
   }, [state, currentDraw, totalDraws]);
-
-  // Handle Ctrl key to show mouse pointer again
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Control") {
-        setIsPointerHidden(false);
-        if (document.pointerLockElement) {
-          document.exitPointerLock();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleCanvasClick = () => {
-    // Re-hide pointer on canvas click during active session
-    if (stateRef.current !== "completed" && stateRef.current !== "paused") {
-      setIsPointerHidden(true);
-      if (containerRef.current && !document.pointerLockElement) {
-        try {
-          containerRef.current.requestPointerLock();
-        } catch (e) {
-          // Fallback to CSS cursor: none
-        }
-      }
-    }
-  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -98,10 +64,19 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
 
     container.appendChild(renderer.domElement);
 
-    // 2. Camera Setup
+    // 2. Camera Setup (with Adaptive Mobile Portrait FOV)
     const { camera: camCfg } = DHAKA_SCENE_CONFIG;
+    const computeAdaptiveFov = (w: number, h: number) => {
+      if (w < h) {
+        // Expand vertical FOV on narrow portrait screens to maintain wide street visibility
+        const aspect = w / h;
+        return Math.min(78, camCfg.fov + (0.75 - Math.min(0.75, aspect)) * 36);
+      }
+      return camCfg.fov;
+    };
+
     const camera = new THREE.PerspectiveCamera(
-      camCfg.fov,
+      computeAdaptiveFov(width, height),
       width / height,
       camCfg.near,
       camCfg.far
@@ -110,15 +85,20 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
     // 3. World Scene Setup
     const world = new SceneWorld();
     const scene = world.scene;
+    sceneRef.current = scene;
 
     // 4. Attach First-Person Hand to Camera
-    const hand = new FirstPersonHand3D(brand.emberColor, brand.filterTone);
+    const hand = new FirstPersonHand3D(brand);
     handRef.current = hand;
     camera.add(hand.group);
     scene.add(camera);
 
     // 5. Weather & Smoke Particles System
     const weatherAndSmoke = new SmokeParticles3D(DHAKA_SCENE_CONFIG.weather.rainEnabled);
+    weatherAndSmokeRef.current = weatherAndSmoke;
+    if (environment) {
+      weatherAndSmoke.setRainVisible(environment.id === "rainy-window");
+    }
     scene.add(weatherAndSmoke.group);
 
     // 6. Camera Controller (Pan / Look-around)
@@ -130,6 +110,7 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
       const w = container.clientWidth;
       const h = container.clientHeight;
       camera.aspect = w / h;
+      camera.fov = computeAdaptiveFov(w, h);
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
@@ -163,6 +144,9 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
       const smokeOrigin = stateRef.current === "recovering" ? mouthWorldPos : emberWorldPos;
       weatherAndSmoke.update(stateRef.current, smokeOrigin, camera, delta);
 
+      // Update Animated Street NPCs (Tea Maker & Street Brawl)
+      world.update(delta, time / 1000);
+
       renderer.render(scene, camera);
     };
 
@@ -172,37 +156,44 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
     return () => {
       window.removeEventListener("resize", handleResize);
       cancelAnimationFrame(animId);
-      if (document.pointerLockElement) {
-        document.exitPointerLock();
-      }
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
       renderer.dispose();
     };
-  }, [brand.emberColor, reducedMotion]);
+  }, [reducedMotion]);
+
+  // Dynamically update brand styling without reloading WebGL
+  useEffect(() => {
+    if (handRef.current) {
+      handRef.current.updateBrand(brand);
+    }
+  }, [brand.id, brand.emberColor, brand.filterTone, brand.accentColor]);
+
+  // Dynamically update weather effects (rain & fog density) without reloading WebGL
+  useEffect(() => {
+    if (!environment) return;
+    if (weatherAndSmokeRef.current) {
+      weatherAndSmokeRef.current.setRainVisible(environment.id === "rainy-window");
+    }
+    if (sceneRef.current && sceneRef.current.fog) {
+      if (environment.id === "rainy-window") {
+        (sceneRef.current.fog as THREE.FogExp2).density = 0.038;
+      } else if (environment.id === "foggy-night") {
+        (sceneRef.current.fog as THREE.FogExp2).density = 0.065;
+      } else {
+        (sceneRef.current.fog as THREE.FogExp2).density = 0.016;
+      }
+    }
+  }, [environment?.id]);
 
   return (
     <div
       ref={containerRef}
-      onClick={handleCanvasClick}
-      className={`absolute inset-0 w-full h-full overflow-hidden bg-charcoal-950 select-none ${
-        isPointerHidden ? "cursor-none" : "cursor-grab active:cursor-grabbing"
-      }`}
+      className="absolute inset-0 w-full h-full overflow-hidden bg-charcoal-950 select-none cursor-default touch-none"
     >
       {/* Cinematic CRT grain & subtle corner vignette overlay */}
       <div className="absolute inset-0 pointer-events-none bg-radial-vignette opacity-50 z-10" />
-
-      {/* Pointer control hint pill */}
-      {isPointerHidden ? (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-20 px-3.5 py-1 rounded-full bg-charcoal-900/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-amber-300 shadow-lg animate-pulse">
-          Pointer hidden • Press <kbd className="px-1.5 py-0.5 rounded bg-charcoal-800 border border-white/20 text-white font-bold">Ctrl</kbd> to show cursor
-        </div>
-      ) : (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-none z-20 px-3 py-1 rounded-full bg-charcoal-900/60 backdrop-blur-sm border border-white/5 text-[10px] font-mono text-neutral-400 opacity-70">
-          Click scene to lock mouse • Drag to look around
-        </div>
-      )}
     </div>
   );
 };

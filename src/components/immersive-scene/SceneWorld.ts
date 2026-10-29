@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import { ProceduralTextures } from "./ProceduralTextures";
 import { DhakaProps } from "./DhakaProps";
+import { StreetNPCs } from "./StreetNPCs";
 import { DHAKA_SCENE_CONFIG } from "@/config/dhakaScene.config";
 
 export class SceneWorld {
   public scene: THREE.Scene;
   private streetLamps: THREE.PointLight[] = [];
+  private animatedNPCs: ((delta: number, time: number) => void)[] = [];
 
   constructor() {
     this.scene = new THREE.Scene();
@@ -149,28 +151,76 @@ export class SceneWorld {
       bL1.add(shutter);
     }
 
-    // Bengali Shop Sign ("মা ফার্মেসী")
+    // Bengali Shop Sign ("মা ফার্মেসী") — High-Visibility Backlit Sign
     const pharmacySignTex = ProceduralTextures.createBengaliSign(
       "মা ফার্মেসী",
       "ঔষধ ও সার্জিক্যাল পণ্য সামগ্রী",
       "বিসমিল্লাহির রাহমানির রাহীম",
-      "#064e3b",
+      "#022c22",
       "#ffffff",
-      "#34d399",
+      "#10b981",
       true
     );
     const pharmacySign = new THREE.Mesh(
       new THREE.PlaneGeometry(3.2, 0.9),
       new THREE.MeshStandardMaterial({
         map: pharmacySignTex,
-        emissive: new THREE.Color(0x34d399),
-        emissiveIntensity: 0.4,
-        roughness: 0.3,
+        emissiveMap: pharmacySignTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.9,
+        roughness: 0.25,
       })
     );
     pharmacySign.position.set(-2.98, 3.2, 2.0);
     pharmacySign.rotation.y = Math.PI / 2;
     bL1.add(pharmacySign);
+
+    // Weathered Street Wall Posters pasted on Building L1 wall
+    const toLetPosterTex = ProceduralTextures.createStreetPoster(
+      "টু-লেট / TO-LET",
+      "বাড়ি ভাড়া",
+      "৩ রুম, ২ বাথ, ড্রয়িং-ডাইনিং\nলিফট ও জেনারেটর সুবিধা\nপরিবার / চাকুরিজীবী",
+      "যোগাযোগ: ০১৭১১-২৪XXXX",
+      "#fef08a",
+      "#b91c1c",
+      "#1e1b4b"
+    );
+    const toLetPoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.72, 1.02),
+      new THREE.MeshStandardMaterial({
+        map: toLetPosterTex,
+        emissiveMap: toLetPosterTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.5,
+        roughness: 0.8,
+      })
+    );
+    toLetPoster.position.set(-2.97, 1.6, 4.2);
+    toLetPoster.rotation.y = Math.PI / 2;
+    bL1.add(toLetPoster);
+
+    const noticePosterTex = ProceduralTextures.createStreetPoster(
+      "সতর্কবার্তা",
+      "ময়লা ফেলা নিষেধ",
+      "এখানে ময়লা-আবর্জনা ও প্রস্রাব\nকরা সম্পূর্ণ নিষেধ\nআইন অমান্যকারীকে ৫০০/- জরিমানা",
+      "আদেশক্রমে: ঢাকা সিটি কর্পোরেশন",
+      "#ffffff",
+      "#991b1b",
+      "#0f172a"
+    );
+    const noticePoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.68, 0.96),
+      new THREE.MeshStandardMaterial({
+        map: noticePosterTex,
+        emissiveMap: noticePosterTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.5,
+        roughness: 0.8,
+      })
+    );
+    noticePoster.position.set(-2.97, 1.6, -1.2);
+    noticePoster.rotation.y = Math.PI / 2;
+    bL1.add(noticePoster);
 
     // 2nd Floor Balcony with iron railing
     const balconyL1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 4.5), concreteMatA);
@@ -225,28 +275,53 @@ export class SceneWorld {
       bR1.add(shutter);
     }
 
-    // Cyan/Magenta Electronics Sign ("নিউ ঢাকা ইলেকট্রনিক্স")
+    // Cyan/Magenta Electronics Sign ("নিউ ঢাকা ইলেকট্রনিক্স") — High-Visibility Backlit Sign
     const elecSignTex = ProceduralTextures.createBengaliSign(
-      "নিউ ঢাকা",
-      "ইলেকট্রনিক্স ও মোবাইল সার্ভিসিং",
+      "নিউ ঢাকা ইলেকট্রনিক্স",
+      "মোবাইল সার্ভিসিং ও ইলেকট্রিক পার্টস",
       "প্রোঃ আলহাজ্ব রফিকুল ইসলাম",
-      "#0f172a",
+      "#08101e",
+      "#e0f2fe",
       "#38bdf8",
-      "#f43f5e",
       true
     );
     const elecSign = new THREE.Mesh(
       new THREE.PlaneGeometry(3.4, 0.95),
       new THREE.MeshStandardMaterial({
         map: elecSignTex,
-        emissive: new THREE.Color(0x38bdf8),
-        emissiveIntensity: 0.45,
-        roughness: 0.3,
+        emissiveMap: elecSignTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.9,
+        roughness: 0.25,
       })
     );
     elecSign.position.set(2.98, 3.2, 1.0);
     elecSign.rotation.y = -Math.PI / 2;
     bR1.add(elecSign);
+
+    // Weathered Street Wall Poster (Dhaka Cinema Poster) pasted on Building R1
+    const cinemaPosterTex = ProceduralTextures.createStreetPoster(
+      "ঈদ স্পেশাল রিলিজ",
+      "স্বপ্নের নায়ক",
+      "মনমাতানো অ্যাকশন ও রোমান্টিক ছায়াছবি\nদৈনিক ৪টি প্রদর্শনীর টিকিট বুকিং চলছে\nপরিবেশনায়: আনন্দ সিনেমা হল",
+      "ঢাকা ফিল্মস পরিবেশনা",
+      "#fef2f2",
+      "#991b1b",
+      "#1e3a8a"
+    );
+    const cinemaPoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.72, 1.02),
+      new THREE.MeshStandardMaterial({
+        map: cinemaPosterTex,
+        emissiveMap: cinemaPosterTex,
+        emissive: new THREE.Color(0xffffff),
+        emissiveIntensity: 0.5,
+        roughness: 0.8,
+      })
+    );
+    cinemaPoster.position.set(2.97, 1.6, 3.6);
+    cinemaPoster.rotation.y = -Math.PI / 2;
+    bR1.add(cinemaPoster);
 
     // Balcony & Air Condition Outdoor Unit
     const balconyR1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 3.8), concreteMatB);
@@ -299,7 +374,21 @@ export class SceneWorld {
       props.teaStallPosition[2]
     );
     teaStall.rotation.y = props.teaStallRotation;
+
+    // 1b. Desi Tea Vendor NPC behind counter making tea ("চায়ের মামা")
+    const teaVendor = StreetNPCs.createTeaVendor();
+    teaVendor.group.position.set(0, 0, -0.15); // Directly behind the wooden counter table
+    teaStall.add(teaVendor.group);
+    this.animatedNPCs.push(teaVendor.update);
+
     this.scene.add(teaStall);
+
+    // 1c. 3 Street Brawl NPCs fighting just beside the tea stall
+    const fightNPCs = StreetNPCs.createStreetFightNPCs();
+    fightNPCs.group.position.set(-1.45, 0, -1.15); // Curbside right next to tea stall bench
+    fightNPCs.group.rotation.y = 0.35;
+    this.scene.add(fightNPCs.group);
+    this.animatedNPCs.push(fightNPCs.update);
 
     // 2. Traditional Cycle Rickshaw parked on curbside
     const rickshaw = DhakaProps.createRickshaw();
@@ -360,6 +449,15 @@ export class SceneWorld {
       // Span wires across street from Left Pole 1 to Right Pole 3
       const p3 = new THREE.Vector3(poles[3][0], 6.4, poles[3][2]);
       this.scene.add(DhakaProps.createHangingWire(p1, p3, 0.75));
+    }
+  }
+
+  /**
+   * Main render update loop for dynamic street NPCs and world animations
+   */
+  public update(delta: number, time: number): void {
+    for (let i = 0; i < this.animatedNPCs.length; i++) {
+      this.animatedNPCs[i](delta, time);
     }
   }
 }

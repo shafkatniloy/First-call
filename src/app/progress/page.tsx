@@ -15,6 +15,7 @@ import {
   DollarSign,
   ShieldCheck,
   RotateCcw,
+  Trophy,
 } from "lucide-react";
 import { StorageManager, getTodayDateKey } from "@/lib/storage/localStorage";
 import { StorageDataV1, DailyLogEntry, UserBaseline } from "@/types/progress";
@@ -122,19 +123,29 @@ export default function ProgressPage() {
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 mb-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-xs font-mono uppercase tracking-wider"
+          className="flex items-center gap-2 text-neutral-300 hover:text-white transition-colors text-xs font-bengali font-bold tracking-wider"
         >
           <ArrowLeft size={14} />
-          <span>Back to Landing</span>
+          <span>দোকানে ফিরুন</span>
         </Link>
 
-        <Link
-          href="/select"
-          className="px-4 py-2 rounded-full bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs tracking-wider uppercase transition-colors shadow-ember flex items-center gap-2"
-        >
-          <Flame size={14} />
-          <span>New Ritual</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/leaderboard"
+            className="px-3.5 py-2 rounded-full bg-charcoal-800 hover:bg-charcoal-700 border border-amber-500/30 text-amber-300 font-bengali font-bold text-xs tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Trophy size={14} className="text-amber-400" />
+            <span>লিডারবোর্ড</span>
+          </Link>
+
+          <Link
+            href="/"
+            className="px-4 py-2 rounded-full bg-amber-600 hover:bg-amber-500 text-white font-bengali font-bold text-xs tracking-wider transition-colors shadow-ember flex items-center gap-2 cursor-pointer"
+          >
+            <Flame size={14} />
+            <span>আরেকটা ধরা</span>
+          </Link>
+        </div>
       </header>
 
       {/* Main Container */}
@@ -142,17 +153,17 @@ export default function ProgressPage() {
         {/* Title & Privacy Badge */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="font-serif text-3xl font-bold tracking-wide text-white">
-              Smoking Reduction Dashboard
+            <h1 className="font-bengali text-3xl font-bold tracking-wide text-white">
+              সিগারেট কমানোর ড্যাশবোর্ড
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-              Private, self-reported metrics to support gradual consumption reduction.
+            <p className="text-xs sm:text-sm text-neutral-300 mt-1 font-bengali">
+              ধীরে ধীরে সিগারেট খাওয়ার অভ্যাস কমানোর ব্যক্তিগত হিসাব।
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-charcoal-900 border border-white/5 text-[11px] font-mono text-emerald-400 self-start sm:self-auto">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-charcoal-900 border border-white/5 text-xs font-bengali text-emerald-400 self-start sm:self-auto">
             <ShieldCheck size={14} />
-            <span>100% Anonymous Local Data</span>
+            <span>১০০% গোপন ও ব্যক্তিগত তথ্য</span>
           </div>
         </div>
 
@@ -161,9 +172,9 @@ export default function ProgressPage() {
           {/* Card 1: Today's Real Consumption */}
           <div className="bg-charcoal-900 border border-neutral-800 rounded-2xl p-5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between text-neutral-400 text-xs font-mono uppercase tracking-wider mb-1">
-                <span>Real Cigarettes Today</span>
-                <span className="text-[10px] text-neutral-400">Baseline: {baseline}</span>
+              <div className="flex items-center justify-between text-neutral-400 text-xs font-bengali mb-1">
+                <span>আজকের আসল সিগারেট</span>
+                <span className="text-[11px] text-neutral-400">টার্গেট: {baseline}টি</span>
               </div>
               <div className="text-3xl font-mono font-bold text-white mt-1">
                 {todayEntry.realCigarettes}
@@ -173,18 +184,18 @@ export default function ProgressPage() {
             <div className="flex items-center gap-2 mt-4">
               <button
                 onClick={() => handleUpdateReal(-1)}
-                aria-label="Decrease real cigarette count"
-                className="p-2 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-300 transition-colors"
+                aria-label="কমান"
+                className="p-2 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-300 transition-colors cursor-pointer"
               >
                 <Minus size={15} />
               </button>
               <button
                 onClick={() => handleUpdateReal(1)}
-                aria-label="Increase real cigarette count"
-                className="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-200 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+                aria-label="আসল সিগারেট যোগ করুন"
+                className="flex-1 py-2 px-3 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-200 text-xs font-bengali font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Plus size={15} />
-                <span>Log 1 Smoked</span>
+                <span>১টা আসল খাইছি</span>
               </button>
             </div>
           </div>
@@ -299,22 +310,22 @@ export default function ProgressPage() {
           {/* Baseline Configuration Form */}
           <div className="bg-charcoal-900 border border-neutral-800 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-serif text-sm font-bold text-white uppercase tracking-wider">
-                Personal Baseline Settings
+              <h3 className="font-bengali text-sm font-bold text-white tracking-wide">
+                দৈনিক টার্গেট সেটিংস
               </h3>
               <button
                 onClick={() => setIsEditingBaseline(!isEditingBaseline)}
-                className="text-xs font-mono text-amber-400 hover:text-amber-300"
+                className="text-xs font-bengali font-bold text-amber-400 hover:text-amber-300 cursor-pointer"
               >
-                {isEditingBaseline ? "Cancel" : "Edit Baseline"}
+                {isEditingBaseline ? "বাতিল" : "টার্গেট পরিবর্তন"}
               </button>
             </div>
 
             {isEditingBaseline ? (
               <form onSubmit={handleSaveBaseline} className="flex flex-col gap-3 mt-3">
                 <div>
-                  <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                    Daily Cigarette Baseline
+                  <label className="text-xs font-bengali text-neutral-300 block mb-1">
+                    দিনে কয়টা আসল সিগারেট খেতেন
                   </label>
                   <input
                     type="number"
@@ -322,43 +333,43 @@ export default function ProgressPage() {
                     max="100"
                     value={baselineInput}
                     onChange={(e) => setBaselineInput(parseInt(e.target.value, 10) || 0)}
-                    className="w-full bg-charcoal-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-charcoal-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                    Pack Price ($)
+                  <label className="text-xs font-bengali text-neutral-300 block mb-1">
+                    প্যাকেটের দাম (টাকা)
                   </label>
                   <input
                     type="number"
                     min="0"
-                    max="100"
+                    max="1000"
                     value={packPriceInput}
                     onChange={(e) => setPackPriceInput(parseFloat(e.target.value) || 0)}
-                    className="w-full bg-charcoal-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full bg-charcoal-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs uppercase tracking-wider mt-1 transition-colors"
+                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bengali font-bold text-sm tracking-wide mt-1 transition-colors cursor-pointer"
                 >
-                  Save Baseline
+                  সংরক্ষণ করুন
                 </button>
               </form>
             ) : (
-              <div className="flex flex-col gap-2 text-xs text-neutral-300">
+              <div className="flex flex-col gap-2 text-xs text-neutral-300 font-bengali">
                 <div className="flex justify-between py-1.5 border-b border-neutral-800">
-                  <span className="text-neutral-400">Current Daily Baseline:</span>
-                  <strong className="font-mono text-white">{baseline} cigarettes</strong>
+                  <span className="text-neutral-400">দৈনিক স্বাভাবিক টার্গেট:</span>
+                  <strong className="text-white">{baseline}টি সিগারেট</strong>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-neutral-800">
-                  <span className="text-neutral-400">Pack Price (20 cigs):</span>
-                  <strong className="font-mono text-white">${data.baseline.packPrice || 14}</strong>
+                  <span className="text-neutral-400">প্যাকেটের দাম (২০ শলাকা):</span>
+                  <strong className="font-mono text-white">৳{data.baseline.packPrice || 300}</strong>
                 </div>
                 <div className="flex justify-between py-1.5">
-                  <span className="text-neutral-400">Tracking Started:</span>
+                  <span className="text-neutral-400">হিসাব শুরু:</span>
                   <strong className="font-mono text-white">{data.baseline.startDate}</strong>
                 </div>
               </div>
@@ -368,29 +379,29 @@ export default function ProgressPage() {
           {/* Privacy & Local Data Management */}
           <div className="bg-charcoal-900 border border-neutral-800 rounded-2xl p-5 flex flex-col justify-between">
             <div>
-              <h3 className="font-serif text-sm font-bold text-white uppercase tracking-wider mb-2">
-                Data Sovereignty & Privacy
+              <h3 className="font-bengali text-sm font-bold text-white tracking-wide mb-2">
+                তথ্যের সুরক্ষা ও গোপনীয়তা
               </h3>
-              <p className="text-xs text-neutral-400 leading-relaxed mb-4">
-                Your entries remain strictly in your browser&apos;s localStorage. You can export your data as a backup JSON file or permanently erase all logs anytime.
+              <p className="text-xs text-neutral-300 leading-relaxed mb-4 font-bengali">
+                আপনার সমস্ত হিসাব কেবল এই ব্রাউজারে সংরক্ষিত থাকে। আপনি চাইলে ব্যাকআপ ডাউনলোড করতে পারেন অথবা সব হিসাব মুছে ফেলতে পারেন।
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={handleExport}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-200 text-xs font-mono flex items-center justify-center gap-2 transition-colors border border-white/5"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-neutral-200 text-xs font-bengali font-bold flex items-center justify-center gap-2 transition-colors border border-white/5 cursor-pointer"
               >
                 <Download size={14} />
-                <span>Export JSON</span>
+                <span>হিসাব ডাউনলোড (JSON)</span>
               </button>
 
               <button
                 onClick={handleClearAll}
-                className="py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-mono flex items-center justify-center gap-2 transition-colors"
+                className="py-2.5 px-4 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-bengali font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <Trash2 size={14} />
-                <span>Erase All</span>
+                <span>সব মুছুন</span>
               </button>
             </div>
           </div>
@@ -399,7 +410,7 @@ export default function ProgressPage() {
 
       {/* Footer */}
       <footer className="w-full max-w-5xl mx-auto py-6 text-center text-[11px] text-neutral-400 border-t border-neutral-900 mt-8">
-        Vesper Ritual does not provide clinical cessation advice. Self-reported metrics are private estimates for mindful awareness.
+        FIRST CALL does not provide clinical cessation advice. Self-reported metrics are private estimates for mindful awareness.
       </footer>
     </div>
   );

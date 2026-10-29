@@ -43,7 +43,10 @@ export class CameraController {
     // Pointer move / look around
     window.addEventListener("pointermove", (e) => {
       if (!this.isPointerDown) {
-        // Also support gentle hover look-around on desktop
+        // Skip hover calculations on touch screens to prevent camera jumping on mobile tap
+        if (e.pointerType === "touch") return;
+
+        // Gentle ambient hover look-around on desktop mouse move
         const deltaX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
         const deltaY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
         this.targetYaw = -deltaX * DHAKA_SCENE_CONFIG.camera.yawLimit * 0.45;
@@ -57,18 +60,22 @@ export class CameraController {
       this.previousPointerY = e.clientY;
 
       const { camera: cfg } = DHAKA_SCENE_CONFIG;
-      this.targetYaw -= dx * cfg.mouseSensitivity;
-      this.targetPitch -= dy * cfg.mouseSensitivity;
+      // Use higher touchSensitivity for mobile swipes, mouseSensitivity for desktop
+      const sensitivity = e.pointerType === "touch" ? cfg.touchSensitivity : cfg.mouseSensitivity;
+      this.targetYaw -= dx * sensitivity;
+      this.targetPitch -= dy * sensitivity;
 
       // Clamp target rotation
       this.targetYaw = THREE.MathUtils.clamp(this.targetYaw, -cfg.yawLimit, cfg.yawLimit);
       this.targetPitch = THREE.MathUtils.clamp(this.targetPitch, -cfg.pitchLimit, cfg.pitchLimit);
     });
 
-    // Pointer up / touch end
-    window.addEventListener("pointerup", () => {
+    // Pointer up / touch end / touch cancel
+    const handlePointerEnd = () => {
       this.isPointerDown = false;
-    });
+    };
+    window.addEventListener("pointerup", handlePointerEnd);
+    window.addEventListener("pointercancel", handlePointerEnd);
   }
 
   public update(delta: number): void {

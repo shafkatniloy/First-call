@@ -6,8 +6,15 @@ export const metadata: Metadata = {
   title: `${APP_CONFIG.name} — Immersive Smoking-Reduction Ritual`,
   description: APP_CONFIG.tagline,
   icons: {
-    icon: "/assets/brand-icon.jpg",
-    apple: "/assets/brand-icon.jpg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png" },
+      { url: "/assets/brand-icon.jpg" },
+    ],
+    apple: [
+      { url: "/apple-icon.png" },
+      { url: "/assets/brand-icon.jpg" },
+    ],
   },
   keywords: ["smoking reduction", "harm reduction", "digital ritual", "cigarette alternative", "mindful breathing"],
 };
@@ -18,6 +25,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

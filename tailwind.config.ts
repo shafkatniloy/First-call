@@ -35,8 +35,9 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["var(--font-cinzel)", "Georgia", "serif"],
-        sans: ["var(--font-inter)", "system-ui", "-apple-system", "sans-serif"],
+        sans: ["'Ekush'", "'Helal Hafiz'", "var(--font-inter)", "system-ui", "-apple-system", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
+        bengali: ["'Ekush'", "'Noto Sans Bengali'", "sans-serif"],
       },
       boxShadow: {
         ember: "0 0 25px 4px rgba(255, 77, 0, 0.45)",

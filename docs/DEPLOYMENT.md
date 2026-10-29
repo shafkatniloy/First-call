@@ -1,70 +1,99 @@
-# Zero-Cost Deployment Guide: Vesper Ritual
+# Zero-cost deployment guide: Vesper Ritual
 
-This guide outlines how to deploy Vesper Ritual using **Vercel's eligible Hobby Free Tier** or alternative zero-cost static hosts (e.g., Cloudflare Pages, Netlify).
+This guide explains how to deploy Vesper Ritual using Vercel's Hobby Free Tier
+or alternative zero-cost static hosting platforms such as Cloudflare Pages and
+Netlify.
+
+## 1. Zero-cost infrastructure architecture
+
+The application is structured to incur zero recurring operational hosting
+costs:
+
+- **Application hosting**: Vercel Hobby Tier (100 GB bandwidth, unlimited
+  personal projects).
+- **Compute and rendering**: Next.js App Router client-side execution with
+  static prerendering.
+- **Storage**: Client-side browser `localStorage` (zero server database costs).
+- **3D engine and media**: Bundled Three.js WebGL runtime and local assets in
+  `public/assets/`.
+- **Audio engine**: In-browser Web Audio API procedural synthesis (zero audio
+  streaming bandwidth).
 
 ---
 
-## 1. Zero-Cost Infrastructure Architecture
-- **Application Hosting**: Vercel Hobby Tier (100 GB bandwidth, unlimited personal projects).
-- **Compute / Rendering**: Next.js App Router static prerendering (Static Export / SSG).
-- **Storage**: Client-side `localStorage` (0 server database costs).
-- **Media**: Local public assets (`public/assets/`) bundled directly with the application.
-- **Audio Engine**: Client-side Web Audio API synthesis (0 streaming or bandwidth cost).
+## 2. Deploying to Vercel (step-by-step)
 
----
-
-## 2. Deploying to Vercel (Step-by-Step)
+Deploying from a GitHub repository takes less than two minutes.
 
 ### Prerequisites
+
 - A free [GitHub](https://github.com) account.
 - A free [Vercel](https://vercel.com) account.
 
-### Step 1: Push Code to GitHub
+### Step 1: Push code to GitHub
+
 ```bash
 git add .
-git commit -m "feat: release initial Vesper Ritual web app"
+git commit -m "feat: release 3D retro Dhaka ritual with glass UI"
 git branch -M main
 git remote add origin https://github.com/<your-username>/vesper-ritual.git
 git push -u origin main
 ```
 
-### Step 2: Import into Vercel
+### Step 2: Import project into Vercel
+
 1. Log in to your Vercel Dashboard.
 2. Click **Add New...** → **Project**.
-3. Select your `vesper-ritual` repository from the GitHub list.
+3. Select your `vesper-ritual` repository from the project list.
 4. Keep the Framework Preset as **Next.js**.
-5. Keep Build Command as `npm run build` and Output Directory as `.next` (default).
-6. Environment Variables: None required for MVP.
+5. Keep Build Command as `npm run build` and Output Directory as `.next`
+   (default).
+6. Environment variables: None required for baseline deployment.
 7. Click **Deploy**.
 
-Vercel will build and deploy the application in under 60 seconds, assigning a live URL like `https://vesper-ritual.vercel.app`.
+Vercel builds and deploys the application automatically, providing a live URL
+such as `https://vesper-ritual.vercel.app`.
 
 ---
 
-## 3. Alternative Hosting: Cloudflare Pages / Static Export
+## 3. Alternative hosting: Cloudflare Pages or static export
 
-If deploying to Cloudflare Pages or GitHub Pages:
+If deploying to static hosting environments like Cloudflare Pages or GitHub
+Pages:
+
 1. In `next.config.mjs`, enable static HTML export:
    ```javascript
    const nextConfig = {
      output: "export",
-     images: { unoptimized: true }
+     images: { unoptimized: true },
    };
    export default nextConfig;
    ```
-2. Run `npm run build`. This generates a standalone static distribution in `/out/`.
-3. Point your static host to the `/out` directory.
+2. Run `npm run build`. This generates a standalone static distribution in
+   `/out/`.
+3. Point your static host to the `/out/` directory.
 
 ---
 
-## 4. Common Deployment Pitfalls & Troubleshooting
+## 4. Common deployment pitfalls and troubleshooting
 
-### Issue 1: Web Audio Not Playing on Mobile Safari
-- **Cause**: iOS Safari blocks Web Audio unless initiated by an explicit user gesture (`touchstart` or `click`).
-- **Resolution**: Vesper Ritual handles this automatically by unlocking `AudioContext` inside user click handlers on the Landing and HUD controls.
+Keep these edge cases in mind when verifying production builds:
 
-### Issue 2: Large Asset LCP (Largest Contentful Paint)
-- **Resolution**: Background images in `public/assets/backgrounds/` are preloaded with `priority` and optimized as progressive JPEGs under 1MB.
+### Web Audio autoplay policies
 
-### Issue 3: Corrupted LocalStorage across Browsers
-- **Resolution**: `StorageManager` includes defensive Zod validation that auto-repairs any schema divergence without white-screening the app.
+Modern mobile browsers (especially iOS Safari) require an initial user
+interaction before audio playback is permitted. Vesper Ritual handles this by
+lazily resuming the `AudioContext` inside user click handlers on the starting
+page and ritual controls.
+
+### Client-side WebGL canvas rendering
+
+Because Three.js requires direct access to browser DOM and WebGL contexts, all
+pages referencing `DhakaSceneCanvas` must wrap the component in `next/dynamic`
+with `{ ssr: false }` to prevent Node.js server prerendering collisions.
+
+### Defensive local storage validation
+
+If a user visits from an older browser version or with corrupted storage data,
+`StorageManager` uses Zod schemas to sanitize and auto-repair data without
+throwing unhandled exceptions or blank screens.

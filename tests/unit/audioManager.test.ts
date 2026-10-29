@@ -27,9 +27,17 @@ describe("AudioManager", () => {
       audio.playLighter();
       audio.playInhale(1.0);
       audio.playExhale(1.0);
+      audio.playRandomDrawSound();
+      audio.playBrandClick();
+      audio.playClick();
       audio.playCompletion();
       audio.startAmbient("rain-window");
       audio.stopAmbient();
     }).not.toThrow();
+  });
+
+  it("safely handles preloadDrawAudio without throwing in test environment", async () => {
+    const audio = AudioManager.getInstance();
+    await expect(audio.preloadDrawAudio()).resolves.not.toThrow();
   });
 });

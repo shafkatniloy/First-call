@@ -8,6 +8,7 @@ import { BRANDS } from "@/config/brands.config";
 import { ENVIRONMENTS } from "@/config/environments.config";
 import { PackIllustration } from "@/components/brand-selection/PackIllustration";
 import { StorageManager } from "@/lib/storage/localStorage";
+import { audioManager } from "@/features/audio/audioManager";
 
 export default function BrandSelectionPage() {
   const router = useRouter();
@@ -24,16 +25,19 @@ export default function BrandSelectionPage() {
   }, []);
 
   const handleSelectBrand = (id: string) => {
+    audioManager.playBrandClick();
     setSelectedBrandId(id);
     StorageManager.updatePreferences({ lastSelectedBrand: id });
   };
 
   const handleSelectDrawCount = (count: 6 | 7) => {
+    audioManager.playClick();
     setDrawCount(count);
     StorageManager.updatePreferences({ preferredDrawCount: count });
   };
 
   const handleSelectEnv = (id: string) => {
+    audioManager.playClick();
     setSelectedEnvId(id);
     StorageManager.updatePreferences({ lastSelectedEnvironment: id });
   };
@@ -68,10 +72,10 @@ export default function BrandSelectionPage() {
       <header className="w-full max-w-5xl mx-auto flex items-center justify-between py-2">
         <Link
           href="/"
-          className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-xs font-mono uppercase tracking-wider"
+          className="flex items-center gap-2 text-neutral-300 hover:text-white transition-colors text-xs font-bengali font-bold tracking-wider"
         >
           <ArrowLeft size={14} />
-          <span>Back to Landing</span>
+          <span>দোকানে ফিরুন</span>
         </Link>
 
         <div className="text-right">
@@ -88,8 +92,8 @@ export default function BrandSelectionPage() {
       <main className="w-full max-w-5xl mx-auto py-6 flex flex-col items-center">
         {/* Title */}
         <div className="text-center mb-8">
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold tracking-wide text-white mb-2">
-            Choose Your Virtual Cigarette
+          <h1 className="font-bengali text-3xl sm:text-5xl font-bold tracking-wide text-white mb-2">
+            মাল কোনটা
           </h1>
           <p className="text-xs sm:text-sm text-neutral-400 max-w-md mx-auto">
             Select the familiar aesthetic, tactile draw profile, and atmosphere for your digital pause.
@@ -151,11 +155,11 @@ export default function BrandSelectionPage() {
           <div className="bg-charcoal-900/60 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-neutral-200">
-                  Ritual Puffs / Draws
+                <label className="text-sm font-bengali font-bold text-neutral-200">
+                  কয় টান মারবেন
                 </label>
-                <span className="text-[10px] text-amber-400 font-mono">
-                  {drawCount} Discrete Draws
+                <span className="text-xs text-amber-400 font-bengali font-semibold">
+                  {drawCount === 7 ? "৭ টান" : "৬ টান"}
                 </span>
               </div>
               <p className="text-[11px] text-neutral-400 mb-3">
@@ -167,24 +171,24 @@ export default function BrandSelectionPage() {
               <button
                 type="button"
                 onClick={() => handleSelectDrawCount(6)}
-                className={`py-2 px-3 rounded-xl text-xs font-mono font-medium transition-all ${
+                className={`py-2.5 px-3 rounded-xl text-xs font-bengali font-bold transition-all ${
                   drawCount === 6
-                    ? "bg-amber-600 text-white border border-amber-400"
+                    ? "bg-amber-600 text-white border border-amber-400 shadow-sm"
                     : "bg-charcoal-800 text-neutral-400 hover:text-white border border-white/5"
                 }`}
               >
-                6 Draws (Brisk)
+                ৬টানে কঠিন নেশা
               </button>
               <button
                 type="button"
                 onClick={() => handleSelectDrawCount(7)}
-                className={`py-2 px-3 rounded-xl text-xs font-mono font-medium transition-all ${
+                className={`py-2.5 px-3 rounded-xl text-xs font-bengali font-bold transition-all ${
                   drawCount === 7
-                    ? "bg-amber-600 text-white border border-amber-400"
+                    ? "bg-amber-600 text-white border border-amber-400 shadow-sm"
                     : "bg-charcoal-800 text-neutral-400 hover:text-white border border-white/5"
                 }`}
               >
-                7 Draws (Classic)
+                ৭টানে আরামসে খান
               </button>
             </div>
           </div>
@@ -193,8 +197,8 @@ export default function BrandSelectionPage() {
           <div className="bg-charcoal-900/60 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-neutral-200">
-                  Atmospheric Setting
+                <label className="text-sm font-bengali font-bold text-neutral-200">
+                  ঢাকার আবহাওয়া
                 </label>
                 <span className="text-[10px] text-neutral-400 font-mono">
                   Visual & Audio
@@ -208,25 +212,31 @@ export default function BrandSelectionPage() {
             <div className="grid grid-cols-3 gap-1.5">
               {ENVIRONMENTS.map((env) => {
                 const isSelected = env.id === selectedEnvId;
+                const envBengaliName =
+                  env.id === "rainy-window"
+                    ? "বৃষ্টি"
+                    : env.id === "foggy-night"
+                    ? "কুয়াশা"
+                    : "সুন্দর আবহাওয়া";
                 return (
                   <button
                     key={env.id}
                     type="button"
                     onClick={() => handleSelectEnv(env.id)}
-                    className={`p-2 rounded-xl text-[10px] font-sans font-medium flex flex-col items-center gap-1 transition-all text-center ${
+                    className={`p-2 rounded-xl text-xs font-bengali font-semibold flex flex-col items-center gap-1.5 transition-all text-center ${
                       isSelected
                         ? "bg-amber-600/30 text-amber-200 border border-amber-500/60"
                         : "bg-charcoal-800 text-neutral-400 hover:text-white border border-white/5"
                     }`}
                   >
                     {env.id === "rainy-window" ? (
-                      <CloudRain size={14} />
+                      <CloudRain size={16} />
                     ) : env.id === "clear-evening" ? (
-                      <SunMedium size={14} />
+                      <SunMedium size={16} />
                     ) : (
-                      <Compass size={14} />
+                      <Compass size={16} />
                     )}
-                    <span className="truncate w-full">{env.name}</span>
+                    <span className="truncate w-full">{envBengaliName}</span>
                   </button>
                 );
               })}
@@ -237,9 +247,9 @@ export default function BrandSelectionPage() {
         {/* Start Button */}
         <button
           onClick={handleStart}
-          className="group flex items-center gap-3 px-10 py-4 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white font-serif font-bold text-sm tracking-widest uppercase shadow-ember hover:shadow-ember-intense transition-all duration-300 border border-amber-400/40 focus:outline-none focus:ring-2 focus:ring-amber-400 active:scale-95"
+          className="group flex items-center gap-3 px-10 py-4 rounded-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white font-bengali font-bold text-base tracking-wide shadow-ember hover:shadow-ember-intense transition-all duration-300 border border-amber-400/40 focus:outline-none focus:ring-2 focus:ring-amber-400 active:scale-95 cursor-pointer"
         >
-          <span>Begin First-Person Ritual</span>
+          <span>মাল ধরা</span>
           <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
         </button>
 

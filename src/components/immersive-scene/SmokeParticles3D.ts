@@ -266,4 +266,13 @@ export class SmokeParticles3D {
       this.rainLines.geometry.attributes.position.needsUpdate = true;
     }
   }
+
+  /**
+   * Toggles rain visibility dynamically based on selected weather
+   */
+  public setRainVisible(visible: boolean): void {
+    if (this.rainLines) {
+      this.rainLines.visible = visible;
+    }
+  }
 }

@@ -15,4 +15,5 @@ export interface BrandConfig {
   };
   filterTone: "cork" | "white" | "gold-band" | "charcoal";
   soundProfile: "crisp" | "mellow" | "dense" | "smooth";
+  image?: string;
 }

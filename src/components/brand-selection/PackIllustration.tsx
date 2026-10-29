@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { BrandConfig } from "@/types/brand";
 
 interface PackIllustrationProps {
@@ -32,9 +33,22 @@ export const PackIllustration: React.FC<PackIllustrationProps> = ({ brand, class
         <span>20 Class A</span>
       </div>
 
-      {/* Center Motif based on brand pattern */}
-      <div className="absolute inset-x-0 top-24 bottom-14 flex flex-col items-center justify-center px-4">
-        {packStyle.pattern === "chevron" && (
+      {/* Center Motif / Real Pack Image */}
+      {brand.image ? (
+        <div className="absolute inset-x-2 top-8 bottom-12 flex items-center justify-center p-2 z-10 pointer-events-none">
+          <div className="relative w-full h-full">
+            <Image
+              src={brand.image}
+              alt={brand.name}
+              fill
+              className="object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
+              sizes="192px"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="absolute inset-x-0 top-24 bottom-14 flex flex-col items-center justify-center px-4">
+          {packStyle.pattern === "chevron" && (
           <div className="relative w-full flex flex-col items-center my-auto">
             {/* Geometric stylized roof-chevron */}
             <svg viewBox="0 0 100 60" className="w-28 drop-shadow-md">
@@ -116,6 +130,7 @@ export const PackIllustration: React.FC<PackIllustrationProps> = ({ brand, class
           </div>
         )}
       </div>
+      )}
 
       {/* Bottom Filter Preview Bar */}
       <div className="absolute bottom-0 inset-x-0 h-10 bg-black/40 backdrop-blur-sm border-t border-white/10 flex items-center justify-between px-3 text-[10px] text-neutral-300">
