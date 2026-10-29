@@ -146,7 +146,7 @@ export class SceneWorld {
     // Ground floor roll-down metal shutters
     for (let i = 0; i < 2; i++) {
       const shutter = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.6), shutterMat);
-      shutter.position.set(-3.01, 1.45, 1.1 + i * 2.6);
+      shutter.position.set(-3.01, 1.45, 1.5 + i * 2.6);
       shutter.rotation.y = Math.PI / 2;
       bL1.add(shutter);
     }
@@ -198,6 +198,49 @@ export class SceneWorld {
     toLetPoster.position.set(-2.97, 1.6, 4.2);
     toLetPoster.rotation.y = Math.PI / 2;
     bL1.add(toLetPoster);
+
+    // Authentic Election Poster pasted directly on Building L1 sidewall beside tea stall under the light
+    const textureLoader = new THREE.TextureLoader();
+    const electionPosterTex = textureLoader.load("/assets/election_poster.jpg", () => {
+      electionPosterTex.colorSpace = THREE.SRGBColorSpace;
+      electionWallPosterMat.needsUpdate = true;
+    });
+
+    const electionWallPosterMat = new THREE.MeshStandardMaterial({
+      map: electionPosterTex,
+      emissiveMap: electionPosterTex,
+      emissive: new THREE.Color(0xffffff),
+      emissiveIntensity: 0.58,
+      roughness: 0.7,
+      metalness: 0.02,
+    });
+    const bL1ElectionPoster = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.82, 1.10),
+      electionWallPosterMat
+    );
+    bL1ElectionPoster.position.set(-2.96, 1.42, 0.05);
+    bL1ElectionPoster.rotation.y = Math.PI / 2;
+    bL1.add(bL1ElectionPoster);
+
+    // Wall-mounted vintage gooseneck lamp fixture directly above poster on sidewall
+    const posterLampFixture = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.09, 0.1, 10),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 })
+    );
+    posterLampFixture.position.set(-2.88, 2.15, 0.05);
+    posterLampFixture.rotation.z = Math.PI / 3;
+    bL1.add(posterLampFixture);
+
+    const posterLampBulb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffe099 })
+    );
+    posterLampBulb.position.set(-2.84, 2.10, 0.05);
+    bL1.add(posterLampBulb);
+
+    const posterWallLight = new THREE.PointLight(0xffaa40, 2.8, 5.0);
+    posterWallLight.position.set(-2.80, 2.08, 0.05);
+    bL1.add(posterWallLight);
 
     // 2nd Floor Balcony with iron railing
     const balconyL1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 4.5), concreteMatA);
@@ -366,13 +409,6 @@ export class SceneWorld {
     fightNPCs.group.rotation.y = 0.35;
     this.scene.add(fightNPCs.group);
     this.animatedNPCs.push(fightNPCs.update);
-
-    // 1d. Roadside Distressed Brick Boundary Wall with Election Poster positioned BESIDE the tea stall
-    // Placed along the left boundary wall flank so both the poster and the entire tea stall are clearly visible
-    const posterWall = DhakaProps.createRoadsidePosterWall(1.15, 2.15, 0.18);
-    posterWall.position.set(-3.05, 0, 0.05);
-    posterWall.rotation.y = 0.45; // Angled facing directly towards the player camera in default view
-    this.scene.add(posterWall);
 
     // 2. Traditional Cycle Rickshaw parked on curbside
     const rickshaw = DhakaProps.createRickshaw();
