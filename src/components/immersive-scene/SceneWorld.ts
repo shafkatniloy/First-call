@@ -146,7 +146,7 @@ export class SceneWorld {
     // Ground floor roll-down metal shutters
     for (let i = 0; i < 2; i++) {
       const shutter = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.6), shutterMat);
-      shutter.position.set(-3.01, 1.45, 0.5 + i * 3.0);
+      shutter.position.set(-3.01, 1.45, 1.1 + i * 2.6);
       shutter.rotation.y = Math.PI / 2;
       bL1.add(shutter);
     }
@@ -198,28 +198,6 @@ export class SceneWorld {
     toLetPoster.position.set(-2.97, 1.6, 4.2);
     toLetPoster.rotation.y = Math.PI / 2;
     bL1.add(toLetPoster);
-
-    // Authentic Election Poster pasted on Building L1 wall beside tea stall
-    const textureLoader = new THREE.TextureLoader();
-    const electionPosterTex = textureLoader.load("/assets/election_poster.jpg", () => {
-      electionPosterTex.colorSpace = THREE.SRGBColorSpace;
-      electionWallPosterMat.needsUpdate = true;
-    });
-
-    const electionWallPosterMat = new THREE.MeshStandardMaterial({
-      map: electionPosterTex,
-      emissiveMap: electionPosterTex,
-      emissive: new THREE.Color(0xffffff),
-      emissiveIntensity: 0.52,
-      roughness: 0.75,
-    });
-    const bL1ElectionPoster = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.84, 1.12),
-      electionWallPosterMat
-    );
-    bL1ElectionPoster.position.set(-2.97, 1.6, -1.2);
-    bL1ElectionPoster.rotation.y = Math.PI / 2;
-    bL1.add(bL1ElectionPoster);
 
     // 2nd Floor Balcony with iron railing
     const balconyL1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 4.5), concreteMatA);
@@ -389,9 +367,10 @@ export class SceneWorld {
     this.scene.add(fightNPCs.group);
     this.animatedNPCs.push(fightNPCs.update);
 
-    // 1d. Roadside Distressed Brick Boundary Wall with the Election Poster visible from default view
-    const posterWall = DhakaProps.createRoadsidePosterWall(1.6, 2.3, 0.24);
-    posterWall.position.set(-1.85, 0, -0.45);
+    // 1d. Roadside Distressed Brick Boundary Wall with Election Poster positioned BESIDE the tea stall
+    // Placed along the left boundary wall flank so both the poster and the entire tea stall are clearly visible
+    const posterWall = DhakaProps.createRoadsidePosterWall(1.15, 2.15, 0.18);
+    posterWall.position.set(-3.05, 0, 0.05);
     posterWall.rotation.y = 0.45; // Angled facing directly towards the player camera in default view
     this.scene.add(posterWall);
 

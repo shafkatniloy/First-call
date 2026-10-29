@@ -522,16 +522,16 @@ export class DhakaProps {
    * Roadside Distressed Brick Boundary Wall with the Authentic Election Poster pasted at eye level
    */
   public static createRoadsidePosterWall(
-    width: number = 1.6,
-    height: number = 2.3,
-    depth: number = 0.24
+    width: number = 1.15,
+    height: number = 2.15,
+    depth: number = 0.18
   ): THREE.Group {
     const wallGroup = new THREE.Group();
     wallGroup.name = "RoadsidePosterWall";
 
     // 1. Brick Wall Body
     const brickTex = ProceduralTextures.createBrickWallTexture();
-    brickTex.repeat.set(1.5, 2.0);
+    brickTex.repeat.set(1.2, 1.8);
     const brickMat = new THREE.MeshStandardMaterial({
       map: brickTex,
       roughness: 0.88,
@@ -552,10 +552,10 @@ export class DhakaProps {
       roughness: 0.9,
     });
     const coping = new THREE.Mesh(
-      new THREE.BoxGeometry(width + 0.1, 0.09, depth + 0.08),
+      new THREE.BoxGeometry(width + 0.08, 0.08, depth + 0.06),
       copingMat
     );
-    coping.position.y = height + 0.045;
+    coping.position.y = height + 0.04;
     coping.castShadow = true;
     wallGroup.add(coping);
 
@@ -575,8 +575,8 @@ export class DhakaProps {
       posterMat.needsUpdate = true;
     });
 
-    // 764 x 1024 aspect ratio: 0.746 (0.84m wide x 1.12m tall)
-    const posterGeo = new THREE.PlaneGeometry(0.84, 1.12);
+    // 764 x 1024 aspect ratio: 0.746 (0.80m wide x 1.07m tall)
+    const posterGeo = new THREE.PlaneGeometry(0.80, 1.07);
     const posterMat = new THREE.MeshStandardMaterial({
       map: posterTex,
       emissiveMap: posterTex,
@@ -586,7 +586,7 @@ export class DhakaProps {
       metalness: 0.02,
     });
     const poster = new THREE.Mesh(posterGeo, posterMat);
-    poster.position.set(0, 1.25, depth / 2 + 0.008);
+    poster.position.set(0, 1.15, depth / 2 + 0.008);
     wallGroup.add(poster);
 
     // 5. Subtle wall-mounted brass light fixture above poster
