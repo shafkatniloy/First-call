@@ -38,10 +38,12 @@ describe("Database & Leaderboard", () => {
     expect(res.user?.totalBurnt).toBe(0);
   });
 
-  it("rejects duplicate user creation with exact or case-insensitive name", () => {
-    const duplicateRes = createUser(testUserName.toLowerCase());
-    expect(duplicateRes.success).toBe(false);
-    expect(duplicateRes.error).toContain("অলরেডি নেওয়া আছে");
+  it("recognizes existing user on duplicate name and returns welcome back", () => {
+    const returnRes = createUser(testUserName.toLowerCase());
+    expect(returnRes.success).toBe(true);
+    expect(returnRes.isReturning).toBe(true);
+    expect(returnRes.user?.name).toBe(testUserName);
+    expect(returnRes.message).toContain(`Welcome back @${testUserName}!`);
   });
 
   it("records a burnt cigarette against user", () => {

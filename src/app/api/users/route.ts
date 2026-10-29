@@ -44,6 +44,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isReturning: result.isReturning ?? false,
+      message: result.message,
       user: {
         name: result.user!.name,
         totalBurnt: result.user!.totalBurnt,

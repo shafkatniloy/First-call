@@ -379,6 +379,28 @@
         "benson": 1
       },
       "lastActive": "2026-10-29T15:59:33.218Z"
+    },
+    "testuser_1793292481333#$": {
+      "id": "usr_1793292481348_jkbig",
+      "name": "TestUser_1793292481333#$",
+      "normalizedName": "testuser_1793292481333#$",
+      "createdAt": "2026-10-29T16:48:01.348Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T16:48:01.363Z"
+    },
+    "testuser_1793292575659#$": {
+      "id": "usr_1793292575670_5rnjf",
+      "name": "TestUser_1793292575659#$",
+      "normalizedName": "testuser_1793292575659#$",
+      "createdAt": "2026-10-29T16:49:35.669Z",
+      "totalBurnt": 1,
+      "brandStats": {
+        "benson": 1
+      },
+      "lastActive": "2026-10-29T16:49:35.672Z"
     }
   },
   "burns": [
@@ -516,6 +538,24 @@
       "draws": 7,
       "durationSeconds": 45,
       "timestamp": "2026-10-29T15:59:33.218Z"
+    },
+    {
+      "id": "burn_1793292481363_0mtlk",
+      "userName": "TestUser_1793292481333#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T16:48:01.363Z"
+    },
+    {
+      "id": "burn_1793292575672_x7u0v",
+      "userName": "TestUser_1793292575659#$",
+      "brandId": "benson",
+      "brandName": "Benson & Hedges",
+      "draws": 7,
+      "durationSeconds": 45,
+      "timestamp": "2026-10-29T16:49:35.672Z"
     }
   ]
 }

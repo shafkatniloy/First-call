@@ -160,10 +160,17 @@ export function findUser(name: string): UserRecord | null {
 }
 
 /**
- * Registers a unique username.
- * Returns error if the name already exists or fails validation.
+ * Registers a new username or logs in an existing user.
+ * If the username already exists in the database, recognizes them as returning (Welcome Back)
+ * and continues registering next cigarettes against their existing account.
  */
-export function createUser(name: string): { success: boolean; user?: UserRecord; error?: string } {
+export function createUser(name: string): {
+  success: boolean;
+  user?: UserRecord;
+  isReturning?: boolean;
+  message?: string;
+  error?: string;
+} {
   const validation = validateUsername(name);
   if (!validation.valid) {
     return { success: false, error: validation.error };
@@ -173,10 +180,14 @@ export function createUser(name: string): { success: boolean; user?: UserRecord;
   const trimmed = name.trim();
   const normalized = trimmed.toLowerCase();
 
+  // If user is already in the database, welcome them back!
   if (db.users[normalized]) {
+    const existingUser = db.users[normalized];
     return {
-      success: false,
-      error: "এই নামটি অলরেডি নেওয়া আছে! অন্য ইউনিক নাম বাছুন।",
+      success: true,
+      user: existingUser,
+      isReturning: true,
+      message: `Welcome back @${existingUser.name}!`,
     };
   }
 
@@ -194,7 +205,12 @@ export function createUser(name: string): { success: boolean; user?: UserRecord;
   db.users[normalized] = newUser;
   saveDatabase(db);
 
-  return { success: true, user: newUser };
+  return {
+    success: true,
+    user: newUser,
+    isReturning: false,
+    message: `Welcome @${newUser.name}!`,
+  };
 }
 
 /**
