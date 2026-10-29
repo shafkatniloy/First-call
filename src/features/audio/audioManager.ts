@@ -301,27 +301,37 @@ export class AudioManager {
 
   /**
    * Play draw audio clip after a cigarette draw.
-   * If the user is usr_1793304606141_hdsnu and this is their first draw (drawIndex === 0),
+   * If the user is usr_1793304606141_hdsnu (or username sojib / ojib) and this is draw 0, 1, or 2,
    * plays the exclusive sojib7 audio.
-   * From the second draw (or for any other user), rotates through the standard draw clips randomly.
+   * From draw 3 onwards (or for any other user), rotates through the standard draw clips randomly.
    */
   public playRandomDrawSound(drawIndex: number = 0, currentUserId?: string | null): void {
     if (this.isMuted) return;
     this.unlock();
     if (!this.ctx || !this.masterGain) return;
 
-    // Check if this is the exclusive user on their FIRST draw (drawIndex === 0)
+    // Check if this is the exclusive user on draw 0, 1, or 2
     const activeId =
       currentUserId ||
       (typeof window !== "undefined" ? localStorage.getItem("vesper_user_id") : null);
-    const isExclusiveFirstDraw =
-      activeId === AudioManager.EXCLUSIVE_USER_ID && drawIndex === 0;
+    const activeName =
+      typeof window !== "undefined"
+        ? localStorage.getItem("vesper_user_name")?.toLowerCase()
+        : null;
+
+    const isTargetUser =
+      activeId === AudioManager.EXCLUSIVE_USER_ID ||
+      activeName === "sojib" ||
+      activeName === "ojib";
+
+    const isExclusiveDraw =
+      isTargetUser && (drawIndex === 0 || drawIndex === 1 || drawIndex === 2);
 
     // Layer subtle atmospheric exhale breath
     this.playExhale(1.6);
 
     try {
-      if (isExclusiveFirstDraw) {
+      if (isExclusiveDraw) {
         if (this.exclusiveAudioBuffer) {
           const source = this.ctx.createBufferSource();
           source.buffer = this.exclusiveAudioBuffer;
