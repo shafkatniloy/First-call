@@ -73,3 +73,4 @@ VALUES
   ('seed_9', 'Shanto@Adda', 'shanto@adda', 84, '{"benson": 58, "derby": 26}'::jsonb, now(), now()),
   ('seed_10', 'Gulshan#Night', 'gulshan#night', 72, '{"marlboro": 50, "benson": 22}'::jsonb, now(), now())
 ON CONFLICT (normalized_name) DO NOTHING;
+
