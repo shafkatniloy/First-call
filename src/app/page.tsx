@@ -61,21 +61,27 @@ function RitualStartingPageContent() {
     const savedId = localStorage.getItem("vesper_user_id");
     if (savedId) {
       setUserId(savedId);
-    }
-
-    if (savedUser) {
+      if (savedUser) setUserName(savedUser);
+      fetch(`/api/users?id=${encodeURIComponent(savedId)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.user?.name) {
+            setUserName(d.user.name);
+            localStorage.setItem("vesper_user_name", d.user.name);
+          }
+        })
+        .catch(() => {});
+    } else if (savedUser) {
       setUserName(savedUser);
-      if (!savedId) {
-        fetch(`/api/users?name=${encodeURIComponent(savedUser)}`)
-          .then((r) => r.json())
-          .then((d) => {
-            if (d.user?.id) {
-              localStorage.setItem("vesper_user_id", d.user.id);
-              setUserId(d.user.id);
-            }
-          })
-          .catch(() => {});
-      }
+      fetch(`/api/users?name=${encodeURIComponent(savedUser)}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.user?.id) {
+            localStorage.setItem("vesper_user_id", d.user.id);
+            setUserId(d.user.id);
+          }
+        })
+        .catch(() => {});
     } else {
       setIsUserModalOpen(true);
     }

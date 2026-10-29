@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { findUser, createUser } from "@/lib/db/database";
+import { findUser, findUserById, createUser } from "@/lib/db/database";
 import { validateUsername } from "@/lib/validation/username";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name");
+  const id = searchParams.get("id");
 
-  if (!name) {
-    return NextResponse.json({ error: "Name query parameter required" }, { status: 400 });
+  if (!name && !id) {
+    return NextResponse.json({ error: "Name or Id query parameter required" }, { status: 400 });
   }
 
-  const user = await findUser(name);
+  const user = id ? await findUserById(id) : await findUser(name!);
   return NextResponse.json({
     exists: !!user,
     user: user

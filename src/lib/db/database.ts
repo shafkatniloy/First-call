@@ -142,6 +142,49 @@ export async function findUser(name: string): Promise<UserRecord | null> {
 }
 
 /**
+ * Finds a user by their unique user ID.
+ */
+export async function findUserById(id: string): Promise<UserRecord | null> {
+  const trimmed = id.trim();
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", trimmed)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase findUserById error:", error);
+      } else if (data) {
+        return {
+          id: data.id,
+          name: data.name,
+          normalizedName: data.normalized_name,
+          createdAt: data.created_at,
+          totalBurnt: Number(data.total_burnt) || 0,
+          brandStats: data.brand_stats || {},
+          lastActive: data.last_active,
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error("Supabase findUserById exception, falling back to local:", err);
+    }
+  }
+
+  const db = loadDatabase();
+  for (const user of Object.values(db.users)) {
+    if (user.id === trimmed) {
+      return user;
+    }
+  }
+  return null;
+}
+
+/**
  * Registers a new username or logs in an existing user.
  * If the username already exists in the database, recognizes them as returning (Welcome Back)
  * and continues registering next cigarettes against their existing account.
