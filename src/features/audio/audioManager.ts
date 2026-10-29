@@ -17,7 +17,10 @@ export class AudioManager {
     "/assets/audio/draw_5.mp3",
     "/assets/audio/draw_6.mp3",
   ];
+  public static readonly EXCLUSIVE_USER_ID = "usr_1793304606141_hdsnu";
+  private static readonly EXCLUSIVE_AUDIO_SOURCE = "/assets/audio/sojib7.mp3";
   private drawAudioBuffers: AudioBuffer[] = [];
+  private exclusiveAudioBuffer: AudioBuffer | null = null;
   private lastDrawAudioIndex: number = -1;
   private isPreloadingDrawAudio: boolean = false;
 
@@ -91,6 +94,27 @@ export class AudioManager {
 
       const results = await Promise.all(loadPromises);
       this.drawAudioBuffers = results.filter((b): b is AudioBuffer => b !== null);
+
+      // Preload exclusive draw audio for usr_1793304606141_hdsnu
+      try {
+        const resEx = await fetch(AudioManager.EXCLUSIVE_AUDIO_SOURCE);
+        if (resEx.ok && this.ctx) {
+          const ab = await resEx.arrayBuffer();
+          this.exclusiveAudioBuffer = await this.ctx.decodeAudioData(ab);
+        } else {
+          throw new Error("mp3 not found");
+        }
+      } catch {
+        try {
+          const resOgg = await fetch("/assets/audio/sojib7.ogg");
+          if (resOgg.ok && this.ctx) {
+            const abOgg = await resOgg.arrayBuffer();
+            this.exclusiveAudioBuffer = await this.ctx.decodeAudioData(abOgg);
+          }
+        } catch {
+          // Fallback ignored
+        }
+      }
     } catch (e) {
       console.warn("Could not preload draw audios:", e);
     } finally {
@@ -276,19 +300,48 @@ export class AudioManager {
   }
 
   /**
-   * Play one of the 6 draw audio clips randomly after a cigarette draw.
-   * Gracefully layers with soft procedural exhale and falls back to procedural
-   * audio if assets are loading or unavailable.
+   * Play draw audio clip after a cigarette draw.
+   * If the user is usr_1793304606141_hdsnu and this is their first draw (drawIndex === 0),
+   * plays the exclusive sojib7 audio.
+   * From the second draw (or for any other user), rotates through the standard draw clips randomly.
    */
-  public playRandomDrawSound(): void {
+  public playRandomDrawSound(drawIndex: number = 0, currentUserId?: string | null): void {
     if (this.isMuted) return;
     this.unlock();
     if (!this.ctx || !this.masterGain) return;
+
+    // Check if this is the exclusive user on their FIRST draw (drawIndex === 0)
+    const activeId =
+      currentUserId ||
+      (typeof window !== "undefined" ? localStorage.getItem("vesper_user_id") : null);
+    const isExclusiveFirstDraw =
+      activeId === AudioManager.EXCLUSIVE_USER_ID && drawIndex === 0;
 
     // Layer subtle atmospheric exhale breath
     this.playExhale(1.6);
 
     try {
+      if (isExclusiveFirstDraw) {
+        if (this.exclusiveAudioBuffer) {
+          const source = this.ctx.createBufferSource();
+          source.buffer = this.exclusiveAudioBuffer;
+
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.95, this.ctx.currentTime);
+
+          source.connect(gain);
+          gain.connect(this.masterGain);
+
+          source.start();
+          return;
+        } else if (typeof window !== "undefined") {
+          const audio = new Audio("/assets/audio/sojib7.ogg");
+          audio.volume = this.masterVolume;
+          audio.play().catch(() => {});
+          return;
+        }
+      }
+
       if (this.drawAudioBuffers.length > 0) {
         let nextIdx = Math.floor(Math.random() * this.drawAudioBuffers.length);
         if (this.drawAudioBuffers.length > 1 && nextIdx === this.lastDrawAudioIndex) {

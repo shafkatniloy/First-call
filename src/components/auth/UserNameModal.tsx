@@ -9,7 +9,7 @@ import { audioManager } from "@/features/audio/audioManager";
 interface UserNameModalProps {
   isOpen: boolean;
   canDismiss?: boolean;
-  onSuccess: (name: string) => void;
+  onSuccess: (name: string, id?: string) => void;
   onClose?: () => void;
 }
 
@@ -59,6 +59,13 @@ export const UserNameModal: React.FC<UserNameModalProps> = ({
       audioManager.unlock();
       audioManager.playBrandClick();
 
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vesper_user_name", data.user.name);
+        if (data.user.id) {
+          localStorage.setItem("vesper_user_id", data.user.id);
+        }
+      }
+
       if (data.isReturning) {
         setWelcomeInfo({
           name: data.user.name,
@@ -66,10 +73,10 @@ export const UserNameModal: React.FC<UserNameModalProps> = ({
           isReturning: true,
         });
         setTimeout(() => {
-          onSuccess(data.user.name);
+          onSuccess(data.user.name, data.user.id);
         }, 1400);
       } else {
-        onSuccess(data.user.name);
+        onSuccess(data.user.name, data.user.id);
       }
     } catch {
       setErrorMsg("সার্ভারে সমস্যা হয়েছে, আবার চেষ্টা করুন।");

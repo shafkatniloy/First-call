@@ -109,7 +109,7 @@ function SessionContent() {
         dispatch({ type: "INHALE_COMPLETE" });
       }, APP_CONFIG.drawDurations.inhaleMs);
     } else if (state.state === "recovering") {
-      audioManager.playRandomDrawSound();
+      audioManager.playRandomDrawSound(state.currentDraw);
       timerRef.current = setTimeout(() => {
         dispatch({ type: "RECOVER_COMPLETE" });
       }, APP_CONFIG.drawDurations.recoverMs);

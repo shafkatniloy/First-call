@@ -40,4 +40,14 @@ describe("AudioManager", () => {
     const audio = AudioManager.getInstance();
     await expect(audio.preloadDrawAudio()).resolves.not.toThrow();
   });
+
+  it("handles exclusive audio trigger for target user on first draw", () => {
+    const audio = AudioManager.getInstance();
+    expect(AudioManager.EXCLUSIVE_USER_ID).toBe("usr_1793304606141_hdsnu");
+    expect(() => {
+      audio.playRandomDrawSound(0, "usr_1793304606141_hdsnu");
+      audio.playRandomDrawSound(1, "usr_1793304606141_hdsnu");
+      audio.playRandomDrawSound(0, "regular_user_123");
+    }).not.toThrow();
+  });
 });

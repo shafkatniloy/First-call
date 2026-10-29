@@ -49,6 +49,7 @@ function RitualStartingPageContent() {
   const [isMuted, setIsMuted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [userName, setUserName] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const elapsedTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,8 +58,24 @@ function RitualStartingPageContent() {
   // Load saved preferences and username on mount
   useEffect(() => {
     const savedUser = localStorage.getItem("vesper_user_name");
+    const savedId = localStorage.getItem("vesper_user_id");
+    if (savedId) {
+      setUserId(savedId);
+    }
+
     if (savedUser) {
       setUserName(savedUser);
+      if (!savedId) {
+        fetch(`/api/users?name=${encodeURIComponent(savedUser)}`)
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.user?.id) {
+              localStorage.setItem("vesper_user_id", d.user.id);
+              setUserId(d.user.id);
+            }
+          })
+          .catch(() => {});
+      }
     } else {
       setIsUserModalOpen(true);
     }
@@ -131,7 +148,7 @@ function RitualStartingPageContent() {
         dispatch({ type: "INHALE_COMPLETE" });
       }, APP_CONFIG.drawDurations.inhaleMs);
     } else if (state.state === "recovering") {
-      audioManager.playRandomDrawSound();
+      audioManager.playRandomDrawSound(state.currentDraw, userId);
       timerRef.current = setTimeout(() => {
         dispatch({ type: "RECOVER_COMPLETE" });
       }, APP_CONFIG.drawDurations.recoverMs);
@@ -283,9 +300,11 @@ function RitualStartingPageContent() {
       <UserNameModal
         isOpen={isUserModalOpen}
         canDismiss={!!userName}
-        onSuccess={(name) => {
+        onSuccess={(name, id) => {
           setUserName(name);
+          if (id) setUserId(id);
           localStorage.setItem("vesper_user_name", name);
+          if (id) localStorage.setItem("vesper_user_id", id);
           setIsUserModalOpen(false);
         }}
         onClose={() => setIsUserModalOpen(false)}

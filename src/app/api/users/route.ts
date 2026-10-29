@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     exists: !!user,
     user: user
       ? {
+          id: user.id,
           name: user.name,
           totalBurnt: user.totalBurnt,
           createdAt: user.createdAt,
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       isReturning: result.isReturning ?? false,
       message: result.message,
       user: {
+        id: result.user!.id,
         name: result.user!.name,
         totalBurnt: result.user!.totalBurnt,
         createdAt: result.user!.createdAt,
