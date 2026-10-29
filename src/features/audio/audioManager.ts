@@ -321,6 +321,7 @@ export class AudioManager {
 
     const isTargetUser =
       activeId === AudioManager.EXCLUSIVE_USER_ID ||
+      activeName === "sojeeb@4" ||
       activeName === "sojib" ||
       activeName === "ojib";
 
