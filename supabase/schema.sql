@@ -59,18 +59,5 @@ DROP POLICY IF EXISTS "Allow public insert on burns" ON public.burns;
 CREATE POLICY "Allow public insert on burns" ON public.burns
   FOR INSERT WITH CHECK (true);
 
--- 5. Insert authentic initial seed users
-INSERT INTO public.users (id, name, normalized_name, total_burnt, brand_stats, created_at, last_active)
-VALUES
-  ('seed_1', 'HabibBhai$', 'habibbhai$', 245, '{"benson": 171, "derby": 74}'::jsonb, now(), now()),
-  ('seed_2', 'OldDhaka#King', 'olddhaka#king', 198, '{"sheikh": 138, "benson": 60}'::jsonb, now(), now()),
-  ('seed_3', 'Dhanmondi@7', 'dhanmondi@7', 176, '{"marlboro": 123, "benson": 53}'::jsonb, now(), now()),
-  ('seed_4', 'BensonLover$', 'bensonlover$', 154, '{"benson": 108, "gold-leaf": 46}'::jsonb, now(), now()),
-  ('seed_5', 'ChaiCigarette#', 'chaicigarette#', 139, '{"gold-leaf": 97, "benson": 42}'::jsonb, now(), now()),
-  ('seed_6', 'TongiSmoker@', 'tongismoker@', 122, '{"derby": 85, "benson": 37}'::jsonb, now(), now()),
-  ('seed_7', 'Rony$Boss', 'rony$boss', 110, '{"sheikh": 77, "benson": 33}'::jsonb, now(), now()),
-  ('seed_8', 'Mamun#Dhaka', 'mamun#dhaka', 95, '{"marpolo": 66, "benson": 29}'::jsonb, now(), now()),
-  ('seed_9', 'Shanto@Adda', 'shanto@adda', 84, '{"benson": 58, "derby": 26}'::jsonb, now(), now()),
-  ('seed_10', 'Gulshan#Night', 'gulshan#night', 72, '{"marlboro": 50, "benson": 22}'::jsonb, now(), now())
-ON CONFLICT (normalized_name) DO NOTHING;
+-- 5. No seed users: the database starts completely clean for real persons.
 

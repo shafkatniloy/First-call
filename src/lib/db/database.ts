@@ -47,52 +47,6 @@ const DB_TMP_FILE = path.join(DB_DIR, "database.tmp.json");
 // In-memory cache for ultra-fast local queries
 let cachedDb: DatabaseSchema | null = null;
 
-function generateSeedUsers(): Record<string, UserRecord> {
-  const seedNames = [
-    { name: "HabibBhai$", total: 245, fav: "benson" },
-    { name: "OldDhaka#King", total: 198, fav: "sheikh" },
-    { name: "Dhanmondi@7", total: 176, fav: "marlboro" },
-    { name: "BensonLover$", total: 154, fav: "benson" },
-    { name: "ChaiCigarette#", total: 139, fav: "gold-leaf" },
-    { name: "TongiSmoker@", total: 122, fav: "derby" },
-    { name: "Rony$Boss", total: 110, fav: "sheikh" },
-    { name: "Mamun#Dhaka", total: 95, fav: "marpolo" },
-    { name: "Shanto@Adda", total: 84, fav: "benson" },
-    { name: "Gulshan#Night", total: 72, fav: "marlboro" },
-    { name: "PuranaPaltan$", total: 63, fav: "gold-leaf" },
-    { name: "BabuBazar@", total: 58, fav: "sheikh" },
-    { name: "Mirpur10#Chai", total: 47, fav: "derby" },
-    { name: "Azimpur$", total: 39, fav: "benson" },
-    { name: "Farmgate@Adda", total: 31, fav: "marpolo" },
-    { name: "Mohakhali#King", total: 25, fav: "sheikh" },
-    { name: "Banani$Vibe", total: 18, fav: "marlboro" },
-    { name: "Uttara@Sector4", total: 12, fav: "gold-leaf" },
-    { name: "Rampura#Tea", total: 8, fav: "benson" },
-    { name: "Shahbag$", total: 5, fav: "sheikh" },
-  ];
-
-  const users: Record<string, UserRecord> = {};
-  const now = new Date().toISOString();
-
-  seedNames.forEach((s, idx) => {
-    const normalized = s.name.toLowerCase();
-    users[normalized] = {
-      id: `seed_${idx + 1}`,
-      name: s.name,
-      normalizedName: normalized,
-      createdAt: now,
-      totalBurnt: s.total,
-      brandStats: {
-        [s.fav]: Math.floor(s.total * 0.7),
-        benson: Math.floor(s.total * 0.3),
-      },
-      lastActive: now,
-    };
-  });
-
-  return users;
-}
-
 export function loadDatabase(): DatabaseSchema {
   if (cachedDb) return cachedDb;
 
@@ -120,12 +74,12 @@ export function loadDatabase(): DatabaseSchema {
       }
     }
   } catch (err) {
-    console.error("Error reading database, creating fresh seed database:", err);
+    console.error("Error reading database, creating clean empty database:", err);
   }
 
   const initialDb: DatabaseSchema = {
     version: 1,
-    users: generateSeedUsers(),
+    users: {},
     burns: [],
   };
 
