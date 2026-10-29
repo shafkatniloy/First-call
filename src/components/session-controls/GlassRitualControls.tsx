@@ -13,6 +13,7 @@ import {
   CloudRain,
   CloudFog,
   Moon,
+  Sun,
   Pause,
   Play,
   RotateCcw,
@@ -110,6 +111,8 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
 
   const getWeatherIcon = (envId: string) => {
     switch (envId) {
+      case "day-clear":
+        return <Sun size={13} className="text-amber-400 shrink-0" />;
       case "rainy-window":
         return <CloudRain size={13} className="text-sky-400 shrink-0" />;
       case "foggy-night":
@@ -122,13 +125,15 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
 
   const getWeatherLabel = (envId: string) => {
     switch (envId) {
+      case "day-clear":
+        return "দিন";
       case "rainy-window":
         return "বৃষ্টি";
       case "foggy-night":
         return "কুয়াশা";
       case "clear-evening":
       default:
-        return "সুন্দর আবহাওয়া";
+        return "রাত";
     }
   };
 
@@ -326,14 +331,14 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
                     <span className="block text-xs font-bengali font-bold tracking-wider text-neutral-300 mb-1.5 px-1">
                       ঢাকার আবহাওয়া
                     </span>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-4 gap-1.5">
                       {allEnvironments.map((env) => {
                         const isSelected = env.id === environment.id;
                         return (
                           <button
                             key={env.id}
                             onClick={() => onSelectEnvironment(env.id)}
-                            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl text-xs font-bengali font-semibold transition-all cursor-pointer ${
+                            className={`flex items-center justify-center gap-1.5 py-2 px-1 sm:px-2 rounded-xl text-xs font-bengali font-semibold transition-all cursor-pointer ${
                               isSelected
                                 ? "bg-white/25 border border-white/60 text-white font-bold shadow-[0_0_12px_rgba(255,255,255,0.2)]"
                                 : "bg-white/10 hover:bg-white/20 border border-white/15 text-neutral-300 hover:text-white"
@@ -341,11 +346,7 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
                           >
                             {getWeatherIcon(env.id)}
                             <span className="truncate">
-                              {env.id === "rainy-window"
-                                ? "বৃষ্টি"
-                                : env.id === "foggy-night"
-                                ? "কুয়াশা"
-                                : "সুন্দর আবহাওয়া"}
+                              {getWeatherLabel(env.id)}
                             </span>
                           </button>
                         );

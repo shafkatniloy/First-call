@@ -29,6 +29,7 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
   reducedMotion = false,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const worldRef = useRef<SceneWorld | null>(null);
   const handRef = useRef<FirstPersonHand3D | null>(null);
   const weatherAndSmokeRef = useRef<SmokeParticles3D | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -84,8 +85,14 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
 
     // 3. World Scene Setup
     const world = new SceneWorld();
+    worldRef.current = world;
     const scene = world.scene;
     sceneRef.current = scene;
+
+    // Apply initial environment
+    if (environment) {
+      world.setEnvironment(environment.id);
+    }
 
     // 4. Attach First-Person Hand to Camera
     const hand = new FirstPersonHand3D(brand);
@@ -170,20 +177,14 @@ export const DhakaSceneCanvas: React.FC<DhakaSceneCanvasProps> = ({
     }
   }, [brand.id, brand.emberColor, brand.filterTone, brand.accentColor]);
 
-  // Dynamically update weather effects (rain & fog density) without reloading WebGL
+  // Dynamically update weather effects (Day/Night, sky, sunlight, streetlights & rain) without reloading WebGL
   useEffect(() => {
     if (!environment) return;
+    if (worldRef.current) {
+      worldRef.current.setEnvironment(environment.id);
+    }
     if (weatherAndSmokeRef.current) {
       weatherAndSmokeRef.current.setRainVisible(environment.id === "rainy-window");
-    }
-    if (sceneRef.current && sceneRef.current.fog) {
-      if (environment.id === "rainy-window") {
-        (sceneRef.current.fog as THREE.FogExp2).density = 0.038;
-      } else if (environment.id === "foggy-night") {
-        (sceneRef.current.fog as THREE.FogExp2).density = 0.065;
-      } else {
-        (sceneRef.current.fog as THREE.FogExp2).density = 0.016;
-      }
     }
   }, [environment?.id]);
 

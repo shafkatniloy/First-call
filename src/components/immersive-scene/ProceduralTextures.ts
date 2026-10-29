@@ -991,4 +991,94 @@ export class ProceduralTextures {
       }
     });
   }
+
+  /**
+   * Atmospheric Daytime Blue Sky Texture with soft horizon gradient and fair-weather clouds
+   */
+  public static createDaySkyTexture(): THREE.CanvasTexture {
+    return this.getOrCreate("day_sky_texture", 512, 512, (ctx, w, h) => {
+      // Atmospheric vertical sky gradient (Zenith deep azure to pale warm horizon)
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0.0, "#2563eb"); // Deep azure sky at zenith
+      grad.addColorStop(0.35, "#3b82f6");
+      grad.addColorStop(0.65, "#60a5fa");
+      grad.addColorStop(0.85, "#93c5fd");
+      grad.addColorStop(0.96, "#bfdbfe"); // Pale horizon
+      grad.addColorStop(1.0, "#dbeafe");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Warm sun glare in upper hemisphere
+      const sunGrad = ctx.createRadialGradient(w * 0.72, h * 0.22, 10, w * 0.72, h * 0.22, 130);
+      sunGrad.addColorStop(0.0, "rgba(255, 255, 245, 0.95)");
+      sunGrad.addColorStop(0.2, "rgba(255, 250, 220, 0.65)");
+      sunGrad.addColorStop(0.5, "rgba(255, 240, 190, 0.25)");
+      sunGrad.addColorStop(1.0, "rgba(255, 255, 255, 0)");
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(w * 0.72, h * 0.22, 130, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Soft fair-weather cirrus clouds drifting horizontally
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      const clouds = [
+        { x: 40, y: 160, rw: 110, rh: 22 },
+        { x: 190, y: 190, rw: 140, rh: 28 },
+        { x: 340, y: 140, rw: 100, rh: 20 },
+        { x: 80, y: 280, rw: 160, rh: 32 },
+        { x: 260, y: 310, rw: 130, rh: 25 },
+        { x: 420, y: 260, rw: 90, rh: 18 },
+      ];
+      clouds.forEach((c) => {
+        ctx.beginPath();
+        ctx.ellipse(c.x, c.y, c.rw, c.rh, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fluffy secondary puff
+        ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+        ctx.beginPath();
+        ctx.ellipse(c.x + c.rw * 0.25, c.y - c.rh * 0.3, c.rw * 0.6, c.rh * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      });
+    });
+  }
+
+  /**
+   * Deep Midnight Urban Sky Texture with stars and soft city horizon glow
+   */
+  public static createNightSkyTexture(): THREE.CanvasTexture {
+    return this.getOrCreate("night_sky_texture", 512, 512, (ctx, w, h) => {
+      // Night gradient from zenith to horizon
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0.0, "#030611"); // Midnight black-navy
+      grad.addColorStop(0.5, "#070c1a");
+      grad.addColorStop(0.8, "#0d1527");
+      grad.addColorStop(0.96, "#151e33"); // Distant city twilight
+      grad.addColorStop(1.0, "#1a243c");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Subtle stars in upper hemisphere
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      for (let i = 0; i < 70; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * (h * 0.65);
+        const radius = Math.random() * 1.2 + 0.4;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Cool moonlight bloom in upper-left
+      const moonBloom = ctx.createRadialGradient(w * 0.25, h * 0.2, 5, w * 0.25, h * 0.2, 90);
+      moonBloom.addColorStop(0.0, "rgba(220, 235, 255, 0.8)");
+      moonBloom.addColorStop(0.3, "rgba(140, 180, 240, 0.25)");
+      moonBloom.addColorStop(1.0, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = moonBloom;
+      ctx.beginPath();
+      ctx.arc(w * 0.25, h * 0.2, 90, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
 }

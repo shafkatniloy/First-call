@@ -7,6 +7,12 @@ import { DHAKA_SCENE_CONFIG } from "@/config/dhakaScene.config";
 export class SceneWorld {
   public scene: THREE.Scene;
   private streetLamps: THREE.PointLight[] = [];
+  private ambientLight!: THREE.AmbientLight;
+  private sunMoonLight!: THREE.DirectionalLight;
+  private teaStallBulb: THREE.PointLight | null = null;
+  private posterWallLight: THREE.PointLight | null = null;
+  private backdropBuilding: THREE.Mesh | null = null;
+  private skyMesh: THREE.Mesh | null = null;
   private animatedNPCs: ((delta: number, time: number) => void)[] = [];
 
   constructor() {
@@ -19,36 +25,46 @@ export class SceneWorld {
   }
 
   /**
-   * Atmosphere: Background sky color & Nighttime Exponential Fog
+   * Atmosphere: Panoramic Sky Dome, Background sky color & Exponential Fog
    */
   private setupAtmosphere(): void {
     const { lighting } = DHAKA_SCENE_CONFIG;
     this.scene.background = new THREE.Color(lighting.fogColor);
     this.scene.fog = new THREE.FogExp2(lighting.fogColor, lighting.fogDensity);
 
-    // 1. Ambient Night Fill Light
-    const ambientLight = new THREE.AmbientLight(
+    // 1. Panoramic Sky Dome (Inverted Sphere)
+    const skyGeo = new THREE.SphereGeometry(65, 32, 24);
+    const skyMat = new THREE.MeshBasicMaterial({
+      map: ProceduralTextures.createNightSkyTexture(),
+      side: THREE.BackSide,
+      depthWrite: false,
+    });
+    this.skyMesh = new THREE.Mesh(skyGeo, skyMat);
+    this.scene.add(this.skyMesh);
+
+    // 2. Ambient Fill Light
+    this.ambientLight = new THREE.AmbientLight(
       lighting.ambientColor,
       lighting.ambientIntensity
     );
-    this.scene.add(ambientLight);
+    this.scene.add(this.ambientLight);
 
-    // 2. Directional Cool Moonlight
-    const moon = new THREE.DirectionalLight(
+    // 3. Directional Celestial Light (Sun in Daytime / Moon at Night)
+    this.sunMoonLight = new THREE.DirectionalLight(
       lighting.moonColor,
       lighting.moonIntensity
     );
-    moon.position.set(
+    this.sunMoonLight.position.set(
       lighting.moonPosition[0],
       lighting.moonPosition[1],
       lighting.moonPosition[2]
     );
-    moon.castShadow = true;
-    moon.shadow.mapSize.width = 1024;
-    moon.shadow.mapSize.height = 1024;
-    moon.shadow.camera.near = 0.5;
-    moon.shadow.camera.far = 60;
-    this.scene.add(moon);
+    this.sunMoonLight.castShadow = true;
+    this.sunMoonLight.shadow.mapSize.width = 1024;
+    this.sunMoonLight.shadow.mapSize.height = 1024;
+    this.sunMoonLight.shadow.camera.near = 0.5;
+    this.sunMoonLight.shadow.camera.far = 60;
+    this.scene.add(this.sunMoonLight);
   }
 
   /**
@@ -241,6 +257,7 @@ export class SceneWorld {
     const posterWallLight = new THREE.PointLight(0xffaa40, 2.8, 5.0);
     posterWallLight.position.set(-2.80, 2.08, 0.05);
     bL1.add(posterWallLight);
+    this.posterWallLight = posterWallLight;
 
     // 2nd Floor Balcony with iron railing
     const balconyL1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 4.5), concreteMatA);
@@ -377,6 +394,7 @@ export class SceneWorld {
     const backdropMat = new THREE.MeshBasicMaterial({ color: 0x050811 });
     const backdropBuilding = new THREE.Mesh(backdropGeo, backdropMat);
     backdropBuilding.position.set(0, 10, -38);
+    this.backdropBuilding = backdropBuilding;
     this.scene.add(backdropBuilding);
   }
 
@@ -394,6 +412,11 @@ export class SceneWorld {
       props.teaStallPosition[2]
     );
     teaStall.rotation.y = props.teaStallRotation;
+    teaStall.traverse((child) => {
+      if (child instanceof THREE.PointLight) {
+        this.teaStallBulb = child;
+      }
+    });
 
     // 1b. Desi Tea Vendor NPC behind counter making tea ("চায়ের মামা")
     const teaVendor = StreetNPCs.createTeaVendor();
@@ -440,6 +463,11 @@ export class SceneWorld {
       } else {
         pole.rotation.y = Math.PI; // Arm points -X
       }
+      pole.traverse((child) => {
+        if (child instanceof THREE.PointLight) {
+          this.streetLamps.push(child);
+        }
+      });
       this.scene.add(pole);
     });
   }
@@ -478,6 +506,91 @@ export class SceneWorld {
   public update(delta: number, time: number): void {
     for (let i = 0; i < this.animatedNPCs.length; i++) {
       this.animatedNPCs[i](delta, time);
+    }
+  }
+
+  /**
+   * Dynamically toggles Day vs Night / Rainy / Foggy weather without context destruction
+   */
+  public setEnvironment(envId: string): void {
+    const isDay = envId === "day-clear";
+    const isRain = envId === "rainy-window";
+    const isFog = envId === "foggy-night";
+
+    if (isDay) {
+      // 1. DAYTIME SETUP: Bright daylight sky, gentle atmospheric haze, and warm sunlight
+      this.scene.background = new THREE.Color("#6ba3db");
+      if (this.scene.fog) {
+        (this.scene.fog as THREE.FogExp2).color.set("#94bce4");
+        (this.scene.fog as THREE.FogExp2).density = 0.009;
+      }
+      if (this.skyMesh && this.skyMesh.material) {
+        (this.skyMesh.material as THREE.MeshBasicMaterial).map = ProceduralTextures.createDaySkyTexture();
+        (this.skyMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+      }
+
+      // Daylight sky ambient fill
+      this.ambientLight.color.setHex(0xdbeafe);
+      this.ambientLight.intensity = 1.65;
+
+      // Natural bright overhead sunlight casting shadows from above
+      this.sunMoonLight.color.setHex(0xfffaec);
+      this.sunMoonLight.intensity = 2.8;
+      this.sunMoonLight.position.set(12, 38, 12);
+
+      // Turn streetlamps and night fixtures off during daylight
+      this.streetLamps.forEach((lamp) => {
+        lamp.intensity = 0;
+      });
+      if (this.teaStallBulb) {
+        this.teaStallBulb.intensity = 0.4;
+      }
+      if (this.posterWallLight) {
+        this.posterWallLight.intensity = 0.2;
+      }
+
+      // Distant backdrop building blends into daylight haze
+      if (this.backdropBuilding && this.backdropBuilding.material) {
+        (this.backdropBuilding.material as THREE.MeshBasicMaterial).color.setHex(0x8fa8c6);
+      }
+    } else {
+      // 2. NIGHTTIME SETUP (Current night setup)
+      const fogDensity = isRain ? 0.038 : isFog ? 0.065 : 0.024;
+      const fogColor = isRain ? "#070b12" : isFog ? "#0c1018" : "#080c14";
+
+      this.scene.background = new THREE.Color(fogColor);
+      if (this.scene.fog) {
+        (this.scene.fog as THREE.FogExp2).color.set(fogColor);
+        (this.scene.fog as THREE.FogExp2).density = fogDensity;
+      }
+      if (this.skyMesh && this.skyMesh.material) {
+        (this.skyMesh.material as THREE.MeshBasicMaterial).map = ProceduralTextures.createNightSkyTexture();
+        (this.skyMesh.material as THREE.MeshBasicMaterial).needsUpdate = true;
+      }
+
+      // Moonlight
+      this.ambientLight.color.setHex(isRain ? 0x0f172a : isFog ? 0x1e2430 : 0x141c2c);
+      this.ambientLight.intensity = isRain ? 0.65 : isFog ? 0.8 : 0.7;
+
+      this.sunMoonLight.color.setHex(isRain ? 0x38557a : isFog ? 0x4a6080 : 0x5878b0);
+      this.sunMoonLight.intensity = isRain ? 0.3 : isFog ? 0.25 : 0.4;
+      this.sunMoonLight.position.set(-15, 30, -10);
+
+      // Turn streetlights & lamps ON for the night
+      this.streetLamps.forEach((lamp) => {
+        lamp.intensity = isRain ? 2.8 : isFog ? 2.2 : 2.5;
+      });
+      if (this.teaStallBulb) {
+        this.teaStallBulb.intensity = 3.2;
+      }
+      if (this.posterWallLight) {
+        this.posterWallLight.intensity = 2.8;
+      }
+
+      // Distant backdrop silhouette
+      if (this.backdropBuilding && this.backdropBuilding.material) {
+        (this.backdropBuilding.material as THREE.MeshBasicMaterial).color.setHex(0x050811);
+      }
     }
   }
 }

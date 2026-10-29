@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Sparkles, CloudRain, SunMedium, Compass } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, CloudRain, Sun, Moon, CloudFog } from "lucide-react";
 import { BRANDS } from "@/config/brands.config";
 import { ENVIRONMENTS } from "@/config/environments.config";
 import { PackIllustration } from "@/components/brand-selection/PackIllustration";
@@ -209,15 +209,17 @@ export default function BrandSelectionPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {ENVIRONMENTS.map((env) => {
                 const isSelected = env.id === selectedEnvId;
                 const envBengaliName =
-                  env.id === "rainy-window"
+                  env.id === "day-clear"
+                    ? "দিন"
+                    : env.id === "clear-evening"
+                    ? "রাত"
+                    : env.id === "rainy-window"
                     ? "বৃষ্টি"
-                    : env.id === "foggy-night"
-                    ? "কুয়াশা"
-                    : "সুন্দর আবহাওয়া";
+                    : "কুয়াশা";
                 return (
                   <button
                     key={env.id}
@@ -229,12 +231,14 @@ export default function BrandSelectionPage() {
                         : "bg-charcoal-800 text-neutral-400 hover:text-white border border-white/5"
                     }`}
                   >
-                    {env.id === "rainy-window" ? (
-                      <CloudRain size={16} />
+                    {env.id === "day-clear" ? (
+                      <Sun size={16} className="text-amber-400" />
                     ) : env.id === "clear-evening" ? (
-                      <SunMedium size={16} />
+                      <Moon size={16} className="text-amber-300" />
+                    ) : env.id === "rainy-window" ? (
+                      <CloudRain size={16} className="text-sky-400" />
                     ) : (
-                      <Compass size={16} />
+                      <CloudFog size={16} className="text-neutral-300" />
                     )}
                     <span className="truncate w-full">{envBengaliName}</span>
                   </button>
