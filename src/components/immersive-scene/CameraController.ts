@@ -38,6 +38,11 @@ export class CameraController {
       this.isPointerDown = true;
       this.previousPointerX = e.clientX;
       this.previousPointerY = e.clientY;
+      try {
+        this.domElement.setPointerCapture(e.pointerId);
+      } catch {
+        // Fallback for environments where setPointerCapture is unsupported
+      }
     });
 
     // Pointer move / look around
@@ -71,8 +76,15 @@ export class CameraController {
     });
 
     // Pointer up / touch end / touch cancel
-    const handlePointerEnd = () => {
+    const handlePointerEnd = (e: PointerEvent) => {
       this.isPointerDown = false;
+      try {
+        if (this.domElement.hasPointerCapture(e.pointerId)) {
+          this.domElement.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Safe fallback
+      }
     };
     window.addEventListener("pointerup", handlePointerEnd);
     window.addEventListener("pointercancel", handlePointerEnd);

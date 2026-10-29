@@ -151,7 +151,7 @@ export const SessionHUD: React.FC<SessionHUDProps> = ({
               </span>
             </button>
             <div className="flex items-center gap-4 text-xs text-neutral-400 font-bengali">
-              <span>টান দিতে টোকা দিন</span>
+              <span>বাটনে চাপ দিয়ে টান দিন • স্ক্রিন টেনে চারপাশ দেখুন</span>
               <span>•</span>
               <button
                 onClick={onFinishEarly}

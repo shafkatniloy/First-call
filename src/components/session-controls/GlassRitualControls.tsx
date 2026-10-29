@@ -134,15 +134,6 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
 
   return (
     <div className="fixed inset-0 pointer-events-none flex flex-col justify-between pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] px-3 sm:px-5 z-40 select-none overflow-hidden max-h-[100dvh]">
-      {/* 0. Mobile Screen Tap-To-Draw Target (When ready, tap anywhere on screen to take a draw) */}
-      {state === "ready" && (
-        <div
-          onClick={onInhale}
-          aria-label="Tap anywhere on screen to inhale"
-          className="fixed inset-0 pointer-events-auto z-0 cursor-pointer"
-        />
-      )}
-
       {/* 1. TOP GLASS NAVBAR */}
       <header className="w-full flex items-center justify-between pointer-events-auto gap-2 z-20">
         {/* Left: Branding & Retro FPP Badge + Current User */}
@@ -457,9 +448,9 @@ export const GlassRitualControls: React.FC<GlassRitualControlsProps> = ({
             </button>
 
             {/* Sub-actions: Pause & Finish Early */}
-            <div className="flex items-center gap-3 text-xs font-bengali text-neutral-300">
-              <span>
-                স্ক্রিনে ট্যাপ করে টান দিন
+            <div className="flex items-center gap-2.5 sm:gap-3 text-xs font-bengali text-neutral-300">
+              <span className="text-neutral-400">
+                <span className="hidden sm:inline">Space বা </span>বাটনে টান দিন • স্ক্রিন টেনে চারপাশ দেখুন
               </span>
               <span className="text-neutral-600">•</span>
               <button
